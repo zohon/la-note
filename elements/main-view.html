@@ -199,7 +199,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             <paper-ripple></paper-ripple>
           </a>
 
-          <hr />
+          <hr hidden="{{!thePlace}}" />
 
           <a ata-route="" tabindex="-1" on-tap="sendSMS" hidden="{{!thePlace}}" style="cursor:pointer;">
             <iron-icon icon="communication:textsms"></iron-icon>
@@ -334,7 +334,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         $('#toast').prop('text', 'Url copy to clipboard');
         $('#toast').get(0).show();
 
-        if(window.mobilecheck) {
+        if(window.mobilecheck()) {
           window.open('sms:?body='+window.location.href, '_system');
         }
 
