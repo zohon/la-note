@@ -1,0 +1,334 @@
+<!--
+@license
+Copyright (c) 2015 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+
+<!--
+Example:
+    <menu-select-element></menu-select-element>
+@element menu-select-element
+-->
+
+<dom-module id="menu-select-element">
+  <style is="custom-style">
+
+    :host {
+        font-family: Roboto, Helvetica, Arial, sans-serif;
+
+        -webkit-user-select: none; /* Chrome/Safari */        
+        -moz-user-select: none; /* Firefox */
+        -ms-user-select: none; /* IE10+ */
+
+        /* Rules below not implemented in browsers yet */
+        -o-user-select: none;
+        user-select: none;
+        z-index:100;
+    }
+
+    .header {
+      min-height: 10px;
+      box-shadow: 1px -2px 4px 0px rgba(0,0,0,0.23);
+      background: var(--default-primary-color);
+      cursor: s-resize;
+      transition:all 0.5s ease;
+      position: relative;
+    }
+
+    .header:hover {
+      background: var(--dark-primary-color);
+    }
+
+    .header .listType {
+      position: absolute;
+      top: -23px;
+      left: 10px;
+    }
+
+    .header .listType paper-fab {
+      background: var(--default-primary-color);
+      transition: all 0.5s ease;
+      box-shadow: none !important;
+    }
+
+    .header .listType paper-fab.active {
+      background: var(--accent-color) !important;
+    }    
+
+    .header .listType paper-fab:hover {
+      background: var(--dark-primary-color);
+    }
+
+    .content {
+
+    }
+
+    .cache {
+      background: rgba(0,0,0,0);
+    }
+/*
+    :host.active .cache {
+      height: 100%;
+      width: 100%;
+      position: fixed;
+      top:0;
+      left:0;
+      background: rgba(0,0,0,0.2);
+      z-index: 100;
+      transition:background 0.5s ease;         
+    }
+*/
+    .main {
+        position:fixed;
+        bottom:-60px;
+        left:0;
+        width:100%;
+        height:0;
+        background: #FFF;
+        z-index: 200;
+        transition:all 0.5s ease;
+        height: 0;
+        padding-bottom: 20px;
+    }
+
+    .main .content {
+      height:100%;
+      overflow : auto;  
+    }
+
+
+  .close {
+    position: absolute;
+    right: 10px;
+    top: -20px;
+    z-index: 10;
+  }
+
+  .listType paper-fab {
+     float:left;
+     margin-right: 10px;
+  }
+
+  </style>
+  <template>
+
+  <div class="cache"></div>
+
+  <div class="main">
+
+    <div class="header" on-track="handleTrack">
+      <div class="listType">
+
+        <paper-fab mini icon="maps:local-pizza" on-tap="_changeFilter" data-action="plat" on-tap="activMenu" tabindex="0" elevation="0" class$="[[_getClass(type, 'plat')]]" ></paper-fab>
+        
+        <paper-fab mini icon="maps:local-bar" on-tap="_changeFilter" data-action="drink" class$="[[_getClass(type, 'drink')]]" elevation="0" on-tap="activMenu" tabindex="0"  ></paper-fab>
+
+        <paper-fab mini icon="maps:local-cafe" on-tap="_changeFilter" data-action="dessert" class$="[[_getClass(type, 'dessert')]]" elevation="0" on-tap="activMenu" tabindex="0"  ></paper-fab>
+
+      </div>
+
+      <paper-fab mini icon="icons:expand-more" elevation="0" class="close" on-tap="cache" on-tap="activMenu" tabindex="0"  ></paper-fab>
+
+    </div>
+
+    <div class="content">
+        <template is="dom-repeat" items="{{products}}" as="product" filter="{{isType(type)}}" observe="products.length">
+            <menu-element class="simple select active" product="{{product}}" format="select" ></menu-element>
+        </template>
+    </div>
+
+  </div>
+
+  </template>
+  <script>
+
+    Polymer({
+      is: 'menu-select-element',
+      properties: {
+        products : {
+          type : Array,
+          notify : true
+        },
+        height : {
+          value : $(this).height()
+        },
+        type : {
+          value : 'plat',
+        }
+      },
+      isType: function(type) {
+        return function(item) {
+           return item.type == type;
+        };
+      },
+      _changeFilter : function(e) {
+
+        var target = $(e.target).closest('paper-fab');
+        var type = $(target).attr('data-action');
+        if(type) {
+          this.type = type;
+        }
+
+      },
+      _getClass : function(target, type) {
+
+        if(target == type) {
+          return "active";
+        } else {
+          return "";
+        }
+
+      },
+      handleTrack: function(e) {
+
+        if(!this.trackInfo) {
+            this.trackInfo = {};
+        }
+
+        var message;
+
+        switch(e.detail.state) {
+          case 'start':
+            message = 'Tracking started!';
+
+            this.trackInfo.start = {
+              x : e.detail.x,
+              y : e.detail.y,
+            };
+
+            break;
+          case 'track':
+            message = 'Tracking in progress... ' +
+              e.detail.x + ', ' + e.detail.y;
+            this.trackInfo.progress = {
+              x : e.detail.x,
+              y : e.detail.y,
+            };
+
+            break;
+          case 'end':
+            message = 'Tracking ended!';
+            this.trackInfo.end = {
+              x : e.detail.x,
+              y : e.detail.y,
+            };
+
+
+            break;
+        }
+
+        this.calcTrack(e);
+
+      },
+
+      calcTrack : function(e) {
+
+        if(this.hide) {
+          return false;
+        }
+
+        if(this.trackInfo && this.trackInfo.start && this.trackInfo.progress) {
+
+
+          var diffY = Math.abs(this.trackInfo.progress.y - this.trackInfo.start.y);
+          var diffX = Math.abs(this.trackInfo.progress.x - this.trackInfo.start.x);
+
+          if(diffY < diffX) {
+
+            if(this.trackInfo.start.x > this.trackInfo.progress.x) {
+           
+              if(diffX > $(this).width()/1.5) {
+                console.log('slide right');
+              }
+            } else if(this.trackInfo.start.x < this.trackInfo.progress.x) {
+
+              if(diffX > $(this).width()/1.5) {
+                console.log('slide left');
+              }
+            }
+
+          } else {
+
+            if(this.trackInfo.start.y > this.trackInfo.progress.y) {
+
+                var height = $(window).height()-e.detail.y;
+
+                if(height > $(window).height()-60) {
+                  height = $(window).height()-60;
+                }
+
+                if(!this.hidding) {
+                  $(this).find('.main').css({
+                    'height' : height,
+                    transition : "color 1s ease"
+                  });
+                }
+
+
+            } else if(this.trackInfo.start.y < this.trackInfo.progress.y) {
+
+                var height = $(window).height()-e.detail.y;
+
+                if(height < 100) {
+                  this.cache();
+                } else if(!this.hidding){
+                  $(this).find('.main').css({
+                    'height' : height,
+                    transition : "color 1s ease"
+                  });
+                }
+
+              if(diffY > 300) {
+                //this.cache();
+              }
+            }
+
+          }
+        }
+
+        if(e.detail.state == 'end' && !this.onDestroy) {
+           /* $(this).find('.main').css({
+                height : "50%",
+                transition : "all 0.5s ease"
+            });*/
+        }
+
+      },
+      cache : function() {
+
+        if(!this.hidding) {
+          var that = this;
+
+          this.hidding = true;
+
+            $(this).find('.main').css({
+              height : 0,
+              bottom : "-60px",
+              transition : "all 0.2s ease-out"
+            });
+
+          setTimeout(function() {
+            that.hidding
+          }, 200);
+
+        }
+      },
+      showSelect : function() {
+        console.log("showSelect");
+        this.hidding = false;
+          $(this).find('.main').css({
+            height : 300,
+            bottom : 0,
+            transition : "all 0.5s ease-out"
+          });
+      },
+      _onNeonAnimationFinish : function() {
+
+      }   
+    });
+  </script>
+</dom-module>

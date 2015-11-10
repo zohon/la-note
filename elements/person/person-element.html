@@ -1,0 +1,679 @@
+<!--
+@license
+Copyright (c) 2015 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+<link rel="import" href="../../bower_components/paper-material/paper-material.html">
+<link rel="import" href="../../bower_components/paper-item/paper-item.html">
+<link rel="import" href="../../bower_components/paper-input/paper-input.html">
+<link rel="import" href="../../bower_components/paper-button/paper-button.html">
+
+<link rel="import" href="orders-view.html">
+<link rel="import" href="shared-view.html">
+<link rel="import" href="../menu/menu-element.html">
+
+<!--
+Example:
+    <person-element></person-element>
+@element person-element
+-->
+
+<dom-module id="person-element">
+
+  <template>
+  <style is="custom-style">
+
+    :host {
+      font-family: Roboto, Helvetica, Arial, sans-serif;
+      display: block; 
+      background: #FFF;
+
+      -webkit-user-select: none; /* Chrome/Safari */        
+      -moz-user-select: none; /* Firefox */
+      -ms-user-select: none; /* IE10+ */
+
+      /* Rules below not implemented in browsers yet */
+      -o-user-select: none;
+      user-select: none;         
+    }
+
+    paper-icon-item .avatar {
+      background: var(--light-primary-color);
+    }
+
+    paper-icon-item .avatar {
+      display: inline-block;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      overflow: hidden;
+      background: #ccc;
+      line-height: 40px;
+      text-align: center;
+      text-transform: uppercase;
+      color:#FFF;
+      font-size: 20px;
+      transition : all 0.4s ease;
+    }
+    .active paper-icon-item .avatar {
+        background: var(--accent-color);
+    }
+    .delete {
+        position: absolute;
+        top:10px;
+        left:-60px;
+        display: inline-block;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        overflow: hidden;
+        background: var(--alert-background);
+        line-height: 35px;
+        text-align: center;
+        text-transform: uppercase;
+        color: var(--alert-color);
+        font-size: 20px;
+        z-index: 90;
+        box-shadow: 0 1px 5px rgba(0,0,0,0.23),0 1px 0px rgba(0,0,0,0.16);
+    }
+
+    .edit {
+        position: absolute;
+        top:10px;
+        left:-60px;
+        display: inline-block;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        overflow: hidden;
+        background: var(--accent-color);
+        line-height: 35px;
+        text-align: center;
+        text-transform: uppercase;
+        transition: all 0.2s ease;
+        color: var(--alert-color);
+        font-size: 20px;
+        z-index: 0;
+        box-shadow: 0 1px 5px rgba(0,0,0,0.23),0 1px 0px rgba(0,0,0,0.16);
+    }   
+    
+    .active .edit {
+      left : 10px;
+    }
+
+  paper-icon-item {
+      position: relative;
+      margin: 0 ;
+      padding: 10px;
+      display: flex;
+      text-decoration: none;
+      overflow: hidden;
+  }
+
+  paper-item-body {
+      line-height: 40px;
+  }
+
+  .person {
+    box-shadow: 0 0px 2px rgba(0,0,0,0.16),0 0px 2px rgba(0,0,0,0.08);
+  }
+
+  .active .person {
+    box-shadow: 0 1px 5px rgba(0,0,0,0.23),0 1px 0px rgba(0,0,0,0.16);
+    z-index:1;
+  }
+
+  :focus {
+    outline: none;
+  }
+
+  paper-icon-item .avatar{
+      display: block;
+      float:left;
+      margin-right: 10px;
+  }
+
+  paper-icon-item paper-item-body {
+      display: block;
+      float:left;
+  }
+
+  paper-icon-item .total {
+      position: absolute;
+      right: 0px;
+      top: 0;
+      height: 60px;
+      line-height: 60px;
+      font-size: 30px;
+      padding-right: 5px;
+      color: var(--secondary-text-color);     
+  }
+
+  .person {
+    cursor: pointer;
+    transition: all 0.1s ease;
+  }
+
+  paper-icon-item .secondary {
+    color: var(--secondary-text-color);
+    font-size: 13px;
+  }
+
+  paper-icon-item .total.paid { 
+    color: var(--accent-color) !important;
+  }
+
+  paper-icon-item .total.paid iron-icon { 
+  width: 30px;
+    height: 35px;
+    vertical-align: top;
+    margin-left: 5px;
+    margin: 12px 0;
+  }
+
+  .name {
+    text-transform: capitalize;
+  }
+
+  .details {
+      display: block;
+      overflow: hidden;
+  }
+
+  paper-ripple {
+    color: var(--primary-background-color);
+  }
+
+  .content {
+
+  }
+
+  .content.active {
+  }
+
+  </style>
+
+
+  <div class$="[[_getClass(active, 'content')]]" class="content">
+
+    <paper-icon-item tabindex="0" class="person" on-tap="onTap" on-track="handleTrack">
+
+      <div class="delete" item-icon><iron-icon icon="icons:delete"></iron-icon><paper-ripple></paper-ripple></div>
+
+      <div class="edit" item-icon on-tap="_showMenu"><iron-icon icon="icons:add"></iron-icon><paper-ripple></paper-ripple></div>
+
+        <div class="avatar" item-icon>{{_getAvatar(customer.label)}}</div>
+
+          <paper-item-body hidden="{{edit}}" two-line on-tap="_selectEdit">
+            <div class="name">{{customer.label}}</div>
+            <div secondary class="secondary">{{customer.infos}}</div>
+          </paper-item-body>
+
+          <paper-input hidden="{{!edit}}" on-tap="_dontListen" no-label-float value="{{customer.label}}" on-keydown="_checkKey" class="short" label="Name" ></paper-input>
+
+          <div on-tap="_paid" class$="[[_getPaid(customer.paid, 'total')]]" class='total' ><span>{{_getTotal(total)}}</span><iron-icon icon="editor:money-off" hidden="{{!customer.paid}}"></iron-icon></div>
+    </paper-icon-item>
+
+    <div class="details">
+
+    <div hidden="{{!this.urlOrder}}">
+      <item-data id="item-data" location="{{_loadLocation(customer, place, table)}}" items="{{orders}}" on-connected="calcTotal" ></item-data>
+
+      <orders-view active="{{active}}" customer="{{customer}}" products="{{products}}" customers="{{customers}}" orders="{{orders}}" on-share="listenShare"></orders-view>
+
+      <shared-view active="{{active}}" customer="{{customer}}" products="{{products}}" customers="{{customers}}" shared="{{shared}}" on-share="listenShare" ></shared-view>
+
+    </div>
+
+  </div>
+
+  </template>
+  <script>
+
+    Polymer({
+      is: 'person-element',
+      properties: {
+        customer : {
+          notify : true,          
+          type : Object,
+          observer : "observeChange"
+        },
+        products : Array,
+        active : {
+          type : Boolean,
+          value : false,
+        },
+        edit : {
+          type : Boolean,
+          value : false,
+        },
+        total : {
+          type :Number,
+          value : 0
+        },
+        place : Object,
+        table : Object,
+        customers : Array,
+        orders : {
+          type : Array,
+          value : false
+        } 
+      },
+      observers: [
+        '_ordersChanged(orders.*)',
+        '_productsChanged(products.*)',
+        'calcTotal(shared.*)',
+      ],
+      listenShare : function(e, datas) {
+        console.log('listenSharePerson');
+        console.log(datas);
+        if (datas) {
+          datas.customer = this.customer;
+          this.fire('share-person', datas);
+        }
+      },
+      ready : function() {
+        this.setScrollDirection('y', $(this).find('paper-icon-item').get(0));
+      },
+      share : function(datas) {
+        $(this).find('orders-view').get(0).share(datas);
+      },
+      _loadLocation : function(customer, place, table) {
+
+        if(customer.__firebaseKey__ && place && place.__firebaseKey__ && table && table.__firebaseKey__) {
+
+          
+          var urlOrder = "https://lanote.firebaseio.com/places/"+place.__firebaseKey__+"/tables/"+table.__firebaseKey__+"/customers/"+customer.__firebaseKey__+"/orders";
+
+          if(urlOrder != this.urlOrder) {
+            this.set('urlOrder', urlOrder);
+            this.desactivate();
+          }
+
+          return this.urlOrder;
+        }
+
+        return false;
+      },
+      _checkKey: function(e) {
+        if (e.keyCode === 13) {
+          this.desactivate();
+        }
+      },
+      _paid : function(e) {
+
+        e.preventDefault();
+        e.stopPropagation();
+
+        if(this.customer.paid) {
+          this.set('customer.paid', false);
+        } else {
+          this.set('customer.paid', true);
+        }
+
+        this.fire('change-total', {total : this.total});
+      },
+      _getPaid : function(paid, otherCLass) {
+
+        var result = '';
+        
+        if (paid) {
+          result = 'paid';
+        }
+
+        return result+" "+otherCLass;
+      },
+      observeChange : function(datas) {
+
+        if(this.customer) {
+
+          if(this.customer.creationDate) {
+            var diffDate = new Date().getTime() - this.customer.creationDate;
+          
+            if(!this.customer.label && diffDate < 1000 ) {
+
+              setTimeout(_.bind(function() {
+                  this.activate();
+                  this._selectEdit();
+              },this), 100);
+
+            }
+
+          }
+
+        }
+
+      },
+      isMyOrder : function(item) {
+        return item.customer == this.customer.id;
+      },
+      _showMenu : function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        this.fire('show-menu');
+      },
+      _dontListen : function(e) {
+        if(e) {
+          e.preventDefault();
+          e.stopPropagation();
+        }
+      },
+      _selectEdit : function(e) {
+        this._dontListen(e);
+
+        if(this.active) {
+          if(this.edit) {
+            this.edit = false;
+          } else {
+            this.edit = true;
+            $(this).find('paper-input input').get(0).focus();
+          }
+        } else {
+          this.activate();
+        }
+
+      },
+      onTap : function() {
+
+        if(this.active) {
+          this.desactivate();
+        } else {
+          this.activate();
+        }
+      },
+      activate : function() {
+        this.active = 'active';
+
+        $('#mainContainer').animate({scrollTop: $(this).offset().top+$('#mainContainer').scrollTop()-$('#mainContainer').offset().top-10 },500);
+
+        setTimeout(_.bind(function() {
+
+          $('#mainContainer').animate({scrollTop: $(this).offset().top+$('#mainContainer').scrollTop()-$('#mainContainer').offset().top-10 },100);
+
+        },this), 500);
+
+        this.fire('activate', {customer : this.customer});
+      },
+      desactivate : function() {       
+        this.active = false;
+        this.edit = false;
+        this.fire('desactivate', {customer : this.customer});
+      },      
+      associate : function(product) {
+        if(this.orders) {
+            this.push('orders', {
+              product : product.id,
+              nbrShare : 0,
+              share : false,
+            });
+        }
+      },
+      _getClass : function(target, others) {
+
+        if(target) {
+          return target+" "+others;
+        } else {
+          return others;
+        }
+
+      },
+      _productsChanged : function(data) {
+        this.calcTotal();
+      },
+      _ordersChanged : function(data) {
+        this.calcTotal();
+      },
+      calcTotal : function() {
+
+
+        var total = 0;
+
+        if (this.urlOrder && this.orders && this.orders.length > 0) {
+          
+          _.each(this.orders, _.bind(function(data, index) {
+
+              var prod = _.findWhere(this.products, {id: data.product});
+
+              if(prod && prod.value) {
+                var totalValue = Number(prod.value);
+
+                if(data.share && data.nbrShare) {
+                  totalValue = totalValue/data.nbrShare;
+                }
+
+                total += Number(totalValue);
+              }
+          },this));
+
+        }
+
+        if (this.shared && this.shared.length > 0) {
+ 
+          _.each(this.shared, _.bind(function(data, index) {
+
+            if(data.customers && data.customers[this.customer.__firebaseKey__]) {
+
+              var prod = _.findWhere(this.products, {id: data.product});
+
+              if(prod && prod.value) {
+                var totalValue = Number(prod.value);
+
+                if(Object.size(data.customers) > 0) {
+                  totalValue = totalValue/Object.size(data.customers);
+                }
+
+                total += Number(totalValue);
+              }
+
+            }
+
+          },this));
+
+        }        
+
+        if(total != this.total) {
+          this.total = total;
+          this.fire('change-total', this.total);
+        }
+
+        return this.total;
+      },
+      getIndex : function(array, target) {
+        _.each(array, function(data, index) {
+          if(_.isEqual(data,target)) {
+            return index;
+          }
+        });
+      },
+      isOrder : function(order) {
+        return order.customer == this.customer.id; 
+      },
+      _getAvatar : function(name) {
+        if(name) {
+
+          if (!this.colorAvatar) {
+            var hash  = 0;
+            for (var i = 0; i < name.length; i++) {
+               hash  = name.charCodeAt(i) + ((hash  << 5) - hash );
+            }
+
+            var c = (hash & 0x00FFFFFF).toString(16).toUpperCase();
+            var color =  "00000".substring(0, 6 - c.length) + c;
+            this.colorAvatar = "#"+color;
+            $(this).find('.person .avatar').css('background', this.colorAvatar);
+          }          
+                  
+          return name.charAt(0);
+        }
+
+      },
+      _getTotal : function(total) {
+        if(!total) {
+          total =0;
+        }
+        return  (Math.round(total*100)/100).toFixed(2);
+      },
+      _GetProduct : function(order) {
+        var result = _.findWhere(this.products, {id: order.product});
+
+        if(order.id) {
+          result.order = order;
+        }
+
+        return result;
+      },
+      handleTrack: function(e) {
+
+        if(!this.trackInfo) {
+            this.trackInfo = {};
+        }
+
+        var message;
+
+        switch(e.detail.state) {
+          case 'start':
+            message = 'Tracking started!';
+
+            this.trackInfo.start = {
+              x : e.detail.x,
+              y : e.detail.y,
+            };
+
+            break;
+          case 'track':
+            message = 'Tracking in progress... ' +
+              e.detail.x + ', ' + e.detail.y;
+            this.trackInfo.progress = {
+              x : e.detail.x,
+              y : e.detail.y,
+            };
+
+            break;
+          case 'end':
+            message = 'Tracking ended!';
+            this.trackInfo.end = {
+              x : e.detail.x,
+              y : e.detail.y,
+            };
+
+
+            break;
+        }
+
+        this.calcTrack(e);
+
+      },
+      calcTrack : function(e) {
+
+        if(this.onDestroy) {
+          return false;
+        }
+
+        if(this.trackInfo && this.trackInfo.start && this.trackInfo.progress) {
+
+
+          var diffY = Math.abs(this.trackInfo.progress.y - this.trackInfo.start.y);
+          var diffX = Math.abs(this.trackInfo.progress.x - this.trackInfo.start.x);
+
+          if(diffY < diffX) {
+
+            if(this.trackInfo.start.x > this.trackInfo.progress.x) {
+
+              var percent = diffX/$(this).width();
+              var left = -50+(150*percent);
+
+              if(left > 10) {
+                left = 10;
+              }
+              
+              if(!this.active) {
+                if(diffX > 50) {
+                  this.activate();
+                }
+              }
+
+            } else if(this.trackInfo.start.x < this.trackInfo.progress.x) {
+
+              var percent = diffX/$(this).width();
+              var left = -50+(150*percent);
+
+              if(left > 10) {
+                left = 10;
+              }
+
+              $(this).find('.delete').css({
+                left : left+"px",
+                transition : "height 0.5s ease"
+              });
+
+              if(diffX > $(this).width()/2) {
+                this.destroy();
+              }
+            }
+
+          } else {
+
+
+            if(this.trackInfo.start.y > this.trackInfo.progress.y) {
+              /*
+                $(this).css({
+                  'margin-top' : diffY,
+                });   
+              */ 
+              if(diffY > 100) {
+                console.log('slide top');                
+              }
+            } else if(this.trackInfo.start.y < this.trackInfo.progress.y) {
+/*
+                $(this).css({
+                  'margin-bottom' : diffY,
+                });
+*/
+              if(diffY > 100) {
+                console.log('slide bottom');
+              }
+            }
+
+          }
+        }
+
+        if(e.detail.state == 'end' && !this.onDestroy) {
+            this.trackInfo = {};
+            $(this).find('.delete').css({
+                left : "-60px",
+                transition : "all 0.5s ease"
+            });
+        }
+
+      },
+
+      destroy : function(direction) {
+
+        if(!this.onDestroy) {
+
+          this.onDestroy = true;
+
+            $(this).css({
+              opacity : 0,
+              transition : "all 0.3s ease-out"
+            });
+
+
+          var that = this;
+          setTimeout(_.bind(function() {
+            this.fire('delete', {customer : this.customer});
+            //$(that).remove();
+          },this), 300);
+        }
+
+      },
+      _onNeonAnimationFinish : function() {
+
+      }   
+    });
+  </script>
+</dom-module>

@@ -1,0 +1,295 @@
+<!--
+@license
+Copyright (c) 2015 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+<link rel="import" href="person-element.html">
+<link rel="import" href="../../bower_components/paper-fab/paper-fab.html">
+<link rel="import" href="../../bower_components/paper-dialog/paper-dialog.html">
+<link rel="import" href="../../bower_components/paper-checkbox/paper-checkbox.html">
+<!--
+Example:
+    <persons-element></persons-element>
+@element persons-element
+-->
+
+<dom-module id="persons-element">
+<template>
+  <style>
+    :host {
+      -webkit-user-select: none; /* Chrome/Safari */        
+      -moz-user-select: none; /* Firefox */
+      -ms-user-select: none; /* IE10+ */
+
+      /* Rules below not implemented in browsers yet */
+      -o-user-select: none;
+      user-select: none;         
+    }
+
+    person-element {
+      margin-bottom: 10px;
+    }
+
+
+    .hidden {
+      display: none;
+    }
+
+    paper-checkbox {
+      width: 80px;
+    }
+
+    .shareBox h2 {
+      padding: 5px 10px;
+      background: var(--default-primary-color);
+      color: var(--primary-background-color);
+      margin: 0;
+      box-shadow: 0 1px 5px rgba(0,0,0,0.23),0 1px 0px rgba(0,0,0,0.16);
+    }
+
+    .shareBox .buttons {
+      margin-top: 10px;
+      border-top: 1px dotted #DDD;
+    }
+
+    paper-button[raised].colorful {
+      background: var(--default-primary-color);
+      color: var(--primary-background-color);
+    }
+
+    paper-button.decline {
+      color: var(--alert-background);
+    }
+
+  </style> 
+
+  <template is="dom-repeat" items="{{customers}}" as="customer" sort="_sort">
+   <person-element customers="{{customers}}" customer="{{customer}}" table="{{table}}" place="{{place}}" products="{{products}}" on-activate="activation" on-desactivate="desactivation" on-show-menu="showMenu" on-share-person="listenShare" on-change-total="getTotal" shared="{{shared}}"></person-element>
+  </template>
+
+  <paper-dialog id="actions" modal class="shareBox">
+      <h2><span>[[shareProduct.label]]</span>&nbsp;<div style="float:right;"><span>[[shareProduct.value]]</span>&nbsp;€</div></h2>
+
+      <template is="dom-repeat" items="{{customers}}" observe="shareProduct" as="customer" sort="_sort">
+        <paper-checkbox checked="{{getChecked(listToShare, customer)}}" on-change="selectShareCustomer">[[customer.label]]<span class="hidden firebaseInfo" >{{customer.__firebaseKey__}}</span></paper-checkbox>
+      </template>
+
+      <div class="buttons">
+        <paper-button tabindex="0" dialog-dismiss class="decline"><iron-icon icon="clear"></iron-icon>Decline</paper-button>
+        <paper-button tabindex="0" raised dialog-confirm on-tap="acceptShare" class="colorful"><iron-icon icon="check"></iron-icon>Accept</paper-button>
+      </div>
+  </paper-dialog>
+
+</template>
+  <script>
+    Polymer({
+      is: 'persons-element',
+      properties: {
+        customers: Array,
+        products: Array,
+        orders : Array,
+        shared : Array,
+        activeCustomer : {
+          value : {}
+        },
+        infoTotal : {
+          value : {}
+        },
+        showShare : {
+          value : false
+        },
+        listToShare : {
+          value : [],
+          notify : true, 
+        }
+      },
+      getTotal : function() {
+
+        var total = 0;
+        var paid = 0;
+
+        if(this.getTotalTimeout) {
+          clearTimeout(this.getTotalTimeout);
+        }
+
+        this.getTotalTimeout = setTimeout( _.bind(function(){ 
+
+           _.each($(this).find('person-element'), function(data, index) {
+            if(data.total) {
+              if(data.customer.paid) {
+                paid += data.total;
+              }
+              total += data.total;
+            }
+           });
+
+          this.infoTotal = {
+            total : total,
+            paid : paid
+          };
+ 
+          this.fire('change-total');
+        },this), 50);
+
+      },
+      listenShare : function(e, datas) {
+
+        this.shareOrder = datas.order;
+        this.shareProduct = datas.product;
+        this.shareCustomer = datas.customer;
+
+        if(datas.callbacks) {
+          this.shareCallbacks = datas.callbacks;
+        } else {
+          this.shareCallbacks = "";
+        }
+
+        $(this).find('paper-checkbox').removeAttr('checked');
+
+        var listToShare = [];
+
+        if(datas && datas.customers) {
+          listToShare = datas.customers;
+        }
+
+        if (datas.action) {
+          listToShare[datas.customer.__firebaseKey__] = true;
+          $(this).find('#actions').get(0).open();
+        }
+
+        this.set('listToShare', []);
+        this.set('listToShare', listToShare);
+      },
+      getChecked : function(listToShare, customer) {
+
+        if(customer && listToShare && listToShare[customer.__firebaseKey__]) {
+          return true;
+        }
+
+        return false;
+      },
+      _loadLocationShared : function(place, table) {
+
+        if(place && place.__firebaseKey__ && table && table.__firebaseKey__) {
+
+          var urlShared = "https://lanote.firebaseio.com/places/"+place.__firebaseKey__+"/tables/"+table.__firebaseKey__+"/shared";
+
+          if(urlShared != this.urlShared) {
+            this.set('urlShared', urlShared);
+          }
+
+          return this.urlShared;
+        }
+
+        return false;
+      },      
+      acceptShare : function() {
+
+      if(this.listToShare && Object.size(this.listToShare) == 0) {
+        if(this.shareOrder) {
+          this.arrayDelete('shared', this.shareOrder);
+        }
+        this.listToShare = "";
+      }
+
+      if(this.listToShare) {
+
+        if(this.shareOrder && this.shareOrder.customers) {
+
+          if(this.shareCallbacks && this.shareCallbacks.change) {
+            this.shareCallbacks.change.call(this,{
+                customers : this.listToShare
+            });
+          }
+
+        } else if (this.shareProduct && this.shareOrder.__firebaseKey__) {
+
+          this.push('shared', {
+            product: this.shareProduct.id,
+            customers : this.listToShare
+          });
+
+          if(this.shareCallbacks && this.shareCallbacks.delete) {
+            this.shareCallbacks.delete.call(this,{
+              delete : this.shareOrder.__firebaseKey__
+            });
+          }
+
+        }
+
+      }
+
+      },
+      selectShareCustomer : function(e) {
+
+        if($(e.target).closest('paper-checkbox')) {
+
+          var target = $(e.target).closest('paper-checkbox');
+          if($(target).find('.firebaseInfo').text()) {
+
+            if ($(target).attr('checked')) {
+              this.listToShare[$(target).find('.firebaseInfo').text()] = true;
+            } else {
+              delete this.listToShare[$(target).find('.firebaseInfo').text()];
+            }
+
+            this.set('listToShare', this.listToShare);
+          }
+        }
+
+      }, 
+      _sort : function(a, b) {
+        if (a.label === b.label) return 0;
+        return a.label < b.label ? -1 : 1;
+      },
+      showMenu : function() {
+        console.log('showMenu');
+      },
+      associate : function(product) {
+        if(this.activeCustomer && this.activeCustomer.template && this.activeCustomer.template.target) {
+            this.activeCustomer.template.target.associate(product);
+        }
+      },
+      _GetCustomer : function(id) {
+        var result = _.findWhere(this.customers, {id: id});
+        return result;
+      },
+      desactivation : function(template, datas) {
+
+        if(datas.customer) {
+          var customer = datas.customer;
+        }
+
+        if(customer && this.activeCustomer.customer && this.activeCustomer.customer.id == customer.id) {
+          this.activeCustomer = {};
+        }
+
+      },       
+      activation : function(template, datas) {
+
+        if(datas.customer) {
+          var customer = datas.customer;
+        }
+
+        if(this.activeCustomer && customer) {
+
+          if(this.activeCustomer.customer && this.activeCustomer.customer.id  && this.activeCustomer.customer.id == customer.id) {
+            return false;
+          }
+
+          if(this.activeCustomer && this.activeCustomer.template && this.activeCustomer.template.target) {
+            this.activeCustomer.template.target.desactivate();
+          }
+
+          this.activeCustomer = { template : template, customer : customer};
+        }
+
+      },
+      deleteItem : function() {},
+    });
+  </script>
+</dom-module>

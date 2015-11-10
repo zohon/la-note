@@ -1,0 +1,130 @@
+<!--
+@license
+Copyright (c) 2015 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+<link rel="import" href="bill-element.html">
+<link rel="import" href="../../bower_components/paper-fab/paper-fab.html">
+
+<!--
+Example:
+    <bills-element></bills-element>
+@element bills-element
+-->
+
+<dom-module id="bills-element">
+<template>
+  <style>
+    bill-element {
+    }
+  </style> 
+
+  <template is="dom-repeat" items="{{bills}}" as="bill" sort="_sort">
+   <bill-element bill="{{bill}}" products="{{products}}"></bill-element>
+  </template>
+
+</template>
+  <script>
+    Polymer({
+      is: 'bills-element',
+      properties: {
+        bills : {
+          value : [],          
+        },
+        customers : {
+          type : Array,
+          value : [],
+        },
+        products : {
+          type : Array,
+          value : [],
+        },
+        shared : {
+          type : Array,
+          value : [],
+        },
+      },
+      observers: [
+        '_loadOrders(customers.*)',
+        '_loadOrders(products.*)',
+        '_loadOrders(shared.*)',
+      ],      
+      ready : function() {
+        this._loadOrders();
+        this._loadShared();
+      },
+      _loadOrders : function() {
+
+        this.bills = [];
+
+        if(this.customers) {
+          _.each(this.customers, _.bind(function(customer, index_customer) {
+            if(customer && customer.orders) {
+              _.each(customer.orders, _.bind(function(bill, index_bill) {
+
+                if (bill.product) {
+
+                  var change = false;
+                  _.each(this.bills, function(targetbill, key, obj) { 
+                    if(targetbill.id == bill.product) {
+                      obj[key].nb = targetbill.nb+1;
+                      change = true;
+                    }
+                  });
+
+                  if (!change) {
+
+                    this.push('bills', {
+                      id: bill.product,
+                      nb : 1
+                    });
+
+                  }
+                }
+              },this));
+            }
+          },this));
+        }
+
+        this._loadShared();  
+
+      },
+      _loadShared : function() {
+
+        if(this.shared && this.shared.length > 0) {
+          var change = false;
+          _.each(this.shared, _.bind(function(bill, index) {
+
+            if(Object.size(bill.customers) > 0) {
+              _.each(this.bills, function(targetbill, key, obj) { 
+                if(targetbill.id == bill.product) {
+                  obj[key].nb = targetbill.nb+1;
+                  change = true;
+                }
+              });;
+
+              if (!change) {
+
+                this.push('bills', {
+                  id: bill.product,
+                  nb : 1
+                });
+
+              }
+            }
+
+          },this));
+
+        }  
+      },    
+      _sort : function(a, b) {
+        if (a.nb === b.nb) return 0;
+        return a.nb > b.nb ? -1 : 1;
+      }
+    });
+  </script>
+</dom-module>

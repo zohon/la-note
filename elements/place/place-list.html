@@ -1,0 +1,165 @@
+<!--
+@license
+Copyright (c) 2015 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+
+<link rel="import" href="place-item.html">
+
+<dom-module id="place-list">
+
+  <template>
+
+    <style>
+      :host {
+        display: block;
+        position: relative;
+      }
+
+      place-item {
+        margin-bottom: 10px;
+      }
+
+      .searching {
+        position: absolute;
+        top:-53px;
+        right:0;
+        height: 48px;
+        line-height: 40px;
+        padding: 0 5px;
+        display: inline-block;
+        background: var(--accent-color);
+        color: var(--text-primary-color);
+        cursor: pointer;
+      }
+
+    </style>
+
+    <iron-icon icon="icons:search" class="searching" on-tap="toggleSearch"></iron-icon>
+
+    <paper-input class="search" label="Search" hidden="{{!searching}}" no-label-float type="search" value="{{search::input}}">
+        <div suffix><iron-icon icon="icons:search" ></iron-icon></div>
+    </paper-input>
+
+    <template is="dom-repeat" items="{{places}}" as="place" id="place-list"
+              filter="_isClose"
+              observe="latitude longitude"
+              sort="_sort">
+      <place-item place="{{place}}" position="{{position}}"></place-item>
+    </template>
+
+  </template>
+  <script>
+    Polymer({
+      is: 'place-list',
+      properties: {
+        places: Array,
+        filterBy: {
+          type: String,
+          value: 'all'
+        },
+        position : Array,
+        maxdist : {
+          type : Number,
+          value : 5,
+        },
+        search : {
+          type : String,
+          value : "",
+          observer : '_reload'
+        },
+        searching : {
+          type : Boolean,
+          value : false
+        }
+
+      },
+      observers: [
+        '_reload(position.*)',
+        '_reload(place.*)'
+      ],
+      toggleSearch : function() {
+        if(this.searching) {
+          this.set('searching', false);
+        } else {
+          this.set('searching', true);
+          $(this).find('.search input').get(0).focus();
+        }
+      },   
+      _sort : function(a, b) {
+        if (a.label === b.label) return 0;
+        return a.label < b.label ? -1 : 1;
+      },
+      _isClose: function(place) {
+
+          if(this.position.latitude && this.position.longitude && place.latitude && place.longitude) {
+
+            var resultMetter = this.getDistance(this.position.latitude,this.position.longitude,place.latitude,place.longitude,'K');
+
+            if (resultMetter > this.maxdist) {
+              return false;
+            }
+          }
+
+        if(this.search && place.label) {
+          if(place.label.search(new RegExp(this.search, "i")) < 0 && place.infos.search(new RegExp(this.search, "i")) < 0) {
+            return false;
+          }
+        }
+          return true;
+      },
+      _reload : function() {
+
+        if(!this.timeReload) {
+          this.timeReload = setTimeout(_.bind(function(){ 
+            $(this).find('#place-list').get(0).render();
+            this.timeReload = "";
+          },this), 200);
+          //clearTimeout(this.timeReload);
+        }        
+   
+      },
+      getDistance : function(lat1, lon1, lat2, lon2, unit){
+
+        var radlat1 = Math.PI * lat1/180
+        var radlat2 = Math.PI * lat2/180
+        var radlon1 = Math.PI * lon1/180
+        var radlon2 = Math.PI * lon2/180
+        var theta = lon1-lon2
+        var radtheta = Math.PI * theta/180
+        var dist = Math.sin(radlat1) * Math.sin(radlat2) + Math.cos(radlat1) * Math.cos(radlat2) * Math.cos(radtheta);
+        dist = Math.acos(dist)
+        dist = dist * 180/Math.PI
+        dist = dist * 60 * 1.1515
+        if (unit=="K") { dist = dist * 1.609344 }
+        if (unit=="N") { dist = dist * 0.8684 }
+        return dist;
+
+      },      
+      _computeFilter: function(filterBy) {
+        if (filterBy) {
+
+          // If filterBy is 'all', return a filter that always returns
+          // the todo
+          if (filterBy === 'all') {
+            return function(item) {
+              return item;
+            };
+          }
+/*
+          // Handle 'completed', or its inverse, 'active'
+          var ifComplete = (filterBy === 'completed');
+          return function(item) {
+            return item.isComplete === ifComplete;
+          };
+
+*/
+        }
+      }      
+    });
+  </script>
+</dom-module>

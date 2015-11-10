@@ -1,0 +1,114 @@
+<!--
+@license
+Copyright (c) 2015 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+
+<link rel="import" href="product-item.html">
+
+<dom-module id="product-list">
+
+  <template>
+
+    <style>
+      :host {
+        display: block;
+        padding-bottom: 70px;        
+      }
+      
+      product-item {
+        margin-bottom: 10px;
+      }
+
+      paper-menu {
+      background: none;
+      margin-bottom: 10px;
+      padding: 0;
+      position: fixed;
+      bottom: 0;
+      left: 15px;
+      z-index: 200;
+      }
+
+      paper-menu a{
+        display: inline-block;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        overflow: hidden;
+        background: #ccc;
+        line-height: 36px;
+        text-align: center;
+        text-transform: uppercase;
+        color: #FFF;
+        font-size: 20px;
+        transition: all 0.4s ease;
+        cursor: pointer;
+        box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12), 0 3px 1px -2px rgba(0, 0, 0, 0.2);
+      }
+
+      paper-menu a.iron-selected {
+        background : var(--accent-color);
+      }
+
+    </style>
+
+    <paper-menu attr-for-selected="data-filter" selected="{{filterType}}">
+      <a data-filter="plat" tabindex="-1">
+        <iron-icon icon="maps:local-pizza"></iron-icon>
+      </a>
+      <a data-filter="drink" tabindex="-1">
+        <iron-icon icon="maps:local-bar"></iron-icon>
+      </a>
+      <a data-filter="dessert" tabindex="-1">
+        <iron-icon icon="maps:local-cafe"></iron-icon>
+      </a>
+    </paper-menu>
+    
+    <template is="dom-repeat" items="{{products}}" as="product" 
+              filter="{{_computeFilter(filterType)}}"
+              observe="isComplete"
+              sort="_sort">
+      <product-item product="{{product}}"></product-item>
+    </template>
+
+  </template>
+  <script>
+    Polymer({
+      is: 'product-list',
+      properties: {
+        products: Array,
+        filterType: {
+          type: String,
+          value: 'all'
+        }        
+      },
+      _sort : function(a, b) {
+        if (a.label === b.label) return 0;
+        return a.label < b.label ? -1 : 1;
+      },
+      getFilter : function() {
+        return this.filterType;
+      },
+      _computeFilter: function(filterType) {
+        if (filterType) {
+
+          // If filterBy is 'all', return a filter that always return all
+          if (filterType === 'all') {
+            return function(item) {
+              return item;
+            };
+          }
+
+          return function(item) {
+            return item.type === filterType;
+          };
+        }
+      }      
+    });
+  </script>
+</dom-module>

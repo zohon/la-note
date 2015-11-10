@@ -1,0 +1,288 @@
+<!--
+@license
+Copyright (c) 2015 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+<link rel="import" href="../../bower_components/google-map/google-map.html">
+<link rel="import" href="../../bower_components/google-map/google-map-marker.html">
+<link rel="import" href="../../bower_components/google-map/google-map-search.html">
+<link rel="import" href="place-list.html">
+<dom-module id="place-view">
+
+  <template>
+
+    <style>
+      :host {
+        display: block;
+        padding-bottom: 65px;
+      }
+      paper-fab {
+          position: fixed;
+          bottom:10px;
+          right:25px;
+      }
+
+      google-map {
+        height: 350px;
+        margin-bottom: 10px;
+        display: block;
+      }
+
+      @media (max-width : 970px) {
+        google-map {
+          height: 250px;
+        }
+      }
+
+      paper-item {
+        background: var(--accent-color);
+        color: var(--text-primary-color);
+        margin-bottom: 5px;
+      }
+
+      .action {
+        cursor: pointer;
+      }
+      
+      .create {
+        font-weight: bold;
+      }
+
+      .hidden {
+        display: none;
+      }
+
+      .mapElement {
+        position: relative;
+      }
+
+      .mapElement .selectItem {
+        background: var(--default-primary-color);
+        color: var(--text-primary-color);        
+        padding: 0 0px 0 0px;
+        display: block;
+        margin-top: 5px;
+        text-align: center;
+        margin-bottom: 5px;
+       border-radius: 5px;        
+      }
+
+      .mapElement .selectItem:hover {
+        box-shadow: 0px 2px 3px -2px #000;
+        background: var(--accent-color);
+        color: var(--text-primary-color);  
+      }
+
+      .mapElement h2 {
+        margin:0;
+        padding-bottom: 5px;
+      }
+      .mapElement .tel {
+        padding-bottom: 5px;
+      }
+
+      .closeMap {
+        position: absolute;
+        right: 0;
+        top: 0;
+        background: #FFF;
+        padding: 3px;
+        z-index: 10;
+        border-radius: 0 0 0 10px;
+        box-shadow: -2px 2px 5px -2px rgba(0,0,0,0.2);
+        cursor: pointer;  
+      }
+
+      .closeMap:hover {
+        background: var(--alert-background);
+        color: var(--alert-color);
+      }
+
+      .showMap {
+        margin:5px 0;
+        padding: 12px 0;
+        color : var(--default-primary-color);
+        background: #FFF;
+        position: relative;
+      }
+
+    </style>
+
+  <div hidden="{{showMap}}" class="showMap" on-click="hideMap" style=""><iron-icon icon="maps:satellite" ></iron-icon>&nbsp;show Map<paper-ripple></paper-ripple></div>
+
+  <div class="mapElement" hidden="{{!position.latitude}}">
+
+    <iron-icon class="closeMap" icon="icons:close" on-click="hideMap"></iron-icon>
+
+    <google-map drag-events="true" click-events="true" mouse-events="true" id="map" apiKey="AIzaSyAGRfUpjjJJbiswXXrRs52frBzE2zHGQzA" zoom="14" latitude="{{position.latitude}}" longitude="{{position.longitude}}" on-google-map-dragend="onDrag">
+
+      <template is="dom-repeat" items="[[places]]" as="place" id="marker-map">
+        <google-map-marker mouse-events="true" click-events="true" latitude="{{place.latitude}}" longitude="{{place.longitude}}">
+            <h2>[[place.label]]</h2>
+            <span onclick="selectPlace(event)" class="selectItem" style="cursor:pointer;" data-id="">Select<div class="key hidden">[[place.__firebaseKey__]]</div></span>
+        </google-map-marker>
+      </template>
+
+    </google-map>
+  </div>
+
+  <paper-item hidden="[[!noresult]]">
+    <paper-item-body two-line>
+      <div>Select a place or create one</div>
+      <div secondary></div>
+    </paper-item-body>
+    <paper-ripple></paper-ripple>
+  </paper-item>
+
+ <paper-item hidden="[[places.length]]" on-click="add" class="action">
+    <iron-icon icon="warning"></iron-icon>    
+    <paper-item-body two-line>
+      <div>Create a place</div>
+      <div secondary></div>
+    </paper-item-body>
+    <paper-ripple></paper-ripple>
+  </paper-item>
+
+  <place-list places="{{places}}" position="{{position}}" maxdist="{{maxdist}}" on-delete="delete"></place-list>
+  <paper-fab icon="maps:store-mall-directory" on-click="add"></paper-fab>
+    
+  </template>
+  <script>
+
+    Polymer({
+      is: 'place-view',
+      properties: {
+        places: Array,
+        route: String,
+        position: {
+          type: Object,
+          notify: true,
+        },
+        maxdist : {
+          type : Number,
+          value : 10,
+        },
+        showMap : {
+          value : true
+        },
+        noresult : {
+          value : true
+        }
+      },
+      observers: [
+        '_reload(place.*)'
+      ],
+      ready: function() {
+        $('#map').trigger('resize');
+       //$('google-map-search').search();
+      },
+      _buttonshowMap : function(old_position, latitude) {
+
+        if(old_position && !latitude) {
+          return false;
+        }
+
+        return true;
+      },
+      _showMap : function(latitude, longitude) {
+
+        if(latitude && longitude) {
+          return true;
+        }
+
+        return false;
+      },
+      hideMap : function() {
+        if(this.position) {
+          this.old_position = this.position;
+          this.set('position', '');
+          this.set('showMap', false);
+          this.set('noresult', false);
+
+        } else if(this.old_position){
+          this.set('position', this.old_position);
+          this.set('showMap', true);
+          this.set('noresult', true);
+        }
+      },
+      _reload : function() {
+
+        if(!this.timeReload) {
+          this.timeReload = setTimeout(_.bind(function(){ 
+            $(this).find('#marker-map').get(0).render();
+            this.timeReload = "";
+          },this), 200);
+        }        
+   
+      },      
+      add: function(e) {
+        this.push('places', {
+          label: "",
+          creationDate : new Date().getTime(),
+        });
+      },
+      onDrag : function(info, data) {
+
+/*
+        console.log("onDrag");
+        var theMap = $(this).find('.mapElement google-map').get(0);
+
+        this.set('position', {
+          latitude : theMap.latitude,
+          longitude : theMap.longitude,
+        });
+*/
+      },
+      _getPosition : function(data) {
+        console.log("getPosition");
+        console.log(data.latitude);
+        console.log(data.longitude);
+      },
+      getPosition : function(value) {
+        $('#map').trigger('resize');
+        if(value) {
+          return value;
+        }
+        return 0;
+      },
+      isClose: function(item) {
+
+        if(this.position.latitude && this.position.longitude && item.latitude && item.longitude) {
+          var resultMetter = this.getDistance(this.position.latitude,this.position.longitude,item.latitude,item.longitude,'K');
+
+          if (resultMetter > this.maxdist*20) {
+            return false;
+          }
+
+        }
+
+        this.set('noresult', false);
+        return true;
+      },
+      getDistance : function(lat1, lon1, lat2, lon2, unit){
+
+        var radlat1 = Math.PI * lat1/180
+        var radlat2 = Math.PI * lat2/180
+        var radlon1 = Math.PI * lon1/180
+        var radlon2 = Math.PI * lon2/180
+        var theta = lon1-lon2
+        var radtheta = Math.PI * theta/180
+        var dist = Math.sin(radlat1) * Math.sin(radlat2) + Math.cos(radlat1) * Math.cos(radlat2) * Math.cos(radtheta);
+        dist = Math.acos(dist)
+        dist = dist * 180/Math.PI
+        dist = dist * 60 * 1.1515
+        if (unit=="K") { dist = dist * 1.609344 }
+        if (unit=="N") { dist = dist * 0.8684 }
+        return dist;
+
+      },         
+      delete: function(e) {
+        //this.arrayDelete('places', e.detail.place);
+      },
+    });
+  </script>
+</dom-module>

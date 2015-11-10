@@ -1,0 +1,636 @@
+<!--
+@license
+Copyright (c) 2015 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+<link rel="import" href="../../bower_components/paper-material/paper-material.html">
+<link rel="import" href="../../bower_components/paper-item/paper-item.html">
+<!--
+Example:
+    <menu-element></menu-element>
+@element menu-element
+-->
+
+<dom-module id="menu-element">
+  <style is="custom-style">
+
+    :host {
+        font-family: Roboto, Helvetica, Arial, sans-serif;
+        display: block;
+        position:relative;
+        background: var(--alert-gradient-background);
+
+
+      -webkit-user-select: none; /* Chrome/Safari */        
+      -moz-user-select: none; /* Firefox */
+      -ms-user-select: none; /* IE10+ */
+
+      /* Rules below not implemented in browsers yet */
+      -o-user-select: none;
+      user-select: none;
+
+    }
+
+    .content {
+
+      background: var(--accent-color);
+      color:var(--text-primary-color);
+      cursor: pointer;
+      height : 0;
+      transition: height 0.5s ease, padding 0.5s ease;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .content.share {
+      background: repeating-linear-gradient(
+        45deg,
+        var(--accent-color),
+        var(--accent-color) 10px,
+        var(--light-accent-color) 10px,
+        var(--light-accent-color) 20px
+      );
+    }
+
+    :host.simple .content{
+      background: #FFF !important;
+      color:var(--accent-color);
+      border-bottom: 1px dotted var(--accent-color); 
+    }    
+
+    :host.active .content {
+      height : 60px;
+      border-bottom: 1px dotted #FFF;   
+      
+    }
+
+    .avatar {
+        display: inline-block;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        overflow: hidden;
+        line-height: 40px;
+        text-align: center;
+        text-transform: uppercase;
+        font-size: 20px;
+        transition:all 0.3s ease;
+        -webkit-transform: rotateY(0deg); /* Safari */
+        transform: rotateY(0deg);
+    }
+
+    .avatar.active {
+      -webkit-transform: rotateY(90deg); /* Safari */
+      transform: rotateY(90deg);
+    }
+
+    /*:host:hover .action,*/
+    .action.active {
+      -webkit-transform: rotateY(0deg); /* Safari */
+      transform: rotateY(0deg);
+    }
+
+    .action {
+        -webkit-transform: rotateY(90deg); /* Safari */
+        transform: rotateY(90deg);      
+        position: absolute;
+        top:10px;
+        left:5px;
+        display: inline-block;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        overflow: hidden;
+        background: var(--alert-background);
+        line-height: 35px;
+        text-align: center;
+        text-transform: uppercase;
+        color: var(--alert-color);
+        font-size: 20px;
+        z-index: 90;
+        transition:all 0.3s ease;
+        box-shadow: 0 1px 5px rgba(0,0,0,0.23),0 1px 0px rgba(0,0,0,0.16);
+    }
+
+    :host.select .action {
+      background: var(--valid-background) !important;
+      color: var(--valid-color) !important;
+    }
+
+    paper-icon-item {
+        position: relative;
+        margin: 0 ;
+        display: flex;
+        text-decoration: none;
+        padding: 10px !important;
+    }
+
+    :focus {
+      outline: none;
+    }
+
+    paper-icon-item.active {
+     /* border-left: 5px solid var(--dark-primary-color) !important;*/
+    }
+
+    paper-icon-item .avatar{
+        display: block;
+        float:left;
+        margin-right: 10px;
+    }
+
+    paper-icon-item paper-item-body {
+        display: block;
+        float:left;
+    }
+
+    paper-icon-item .contentRight {
+        position: absolute;
+        right: 15px;
+        top: 0;
+        line-height: 60px;
+        font-size: 25px;     
+    }
+
+    paper-icon-item .contentRight iron-icon  {
+          margin: 0 0 0 10px;
+          height:30px;
+          width:30px;
+    }
+
+    paper-icon-item .secondary {
+      color: var(--secondary-text-color);
+      font-size: 12px;
+    }
+
+    :host.simple paper-icon-item .secondary {
+      color: var(--accent-color);
+    }
+
+    paper-icon-item .total {
+      color: var(--accent-color);
+    }
+
+    :host.simple paper-icon-item .total {
+      color: var(--accent-color);
+    }
+
+    paper-icon-item .avatar {
+      background: var(--accent-color);
+    }
+
+    :host.simple paper-icon-item .avatar {
+      background: var(--accent-color);
+      color:#FFF;
+    }
+
+    .name {
+      text-transform: capitalize;
+    }
+
+    paper-icon-item {
+        padding: 10px 5px 10px 5px;
+        transition: all 0.5s ease;
+        overflow: hidden;
+        border:0;              
+    }
+
+    paper-icon-item .secondary {
+        color:var(--text-primary-color);
+    }
+
+    paper-icon-item .avatar {
+        background:var(--text-primary-color);
+        color:var(--accent-color);
+    }
+
+    paper-icon-item .total {
+        color:var(--text-primary-color);
+        font-size: 18px;
+        float: left;
+    }
+
+
+    .deleteInfo {
+      position: absolute;
+      left: 15px;
+      top:10px;
+      color:#FFF;
+      display: inline-block;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      overflow: hidden;
+      line-height: 39px;
+      text-align: center;
+      background: rgba(255,255,255,0.8);
+      text-transform: uppercase;
+      color: var(--alert-background);
+      font-size: 15px;
+      transition:all 0.3s ease;  
+    }
+
+    .shareInfo {
+      position: absolute;
+      right: 15px;
+      top:10px;
+      color:#FFF;
+      display: inline-block;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      overflow: hidden;
+      line-height: 39px;
+      text-align: center;
+      background: rgba(255,255,255,0.8);
+      text-transform: uppercase;
+      color: var(--alert-background);
+      font-size: 15px;
+      transition:all 0.3s ease;  
+    }    
+
+    paper-item-body {
+      line-height: 40px;
+    }
+
+    .nbItem {
+      margin-right: 5px;
+    }
+
+  </style>
+  <template>
+
+  <div class="deleteInfo"><iron-icon  icon="icons:delete"></iron-icon></div>
+
+  <div class="shareInfo"><iron-icon  icon="social:people"></iron-icon></div>
+
+  <div class="content" class$="[[_getClass(type, 'content')]]">
+
+      <paper-icon-item tabindex="0" role="menuitem" on-track="handleTrack" class$="[[_getClass(active)]]">
+
+          <div class$="[[_getClass(active, 'action')]]" class="action" on-click="action" item-icon><iron-icon icon$="{{_getActionIcon(format)}}"></iron-icon><paper-ripple></paper-ripple></div>
+
+          <div class$="[[_getClass(active, 'avatar')]]" class="avatar" item-icon><iron-icon icon="[[_getIcon(product.type)]]"></iron-icon></div> 
+            <paper-item-body two-line>
+              <div class="name"><span>{{product.label}}</span></div>
+              <!--<div secondary class="secondary">{{product.description}}</div>-->
+            </paper-item-body>
+
+            <div class="contentRight">
+              <div class='total'>{{_getTotal(product.value)}}</div>
+            </div>
+
+          <paper-ripple></paper-ripple>
+      </paper-icon-item>
+
+  </div>
+
+  </template>
+  <script>
+
+    Polymer({
+      is: 'menu-element',
+      listeners: {
+        'tap' : 'onTap',
+      },
+      properties: {
+        order : {
+          type : Object,
+          notify : true,
+        },
+        product : {
+          type : Object,
+          notify : true,
+        },
+        products : Object,
+        format : {
+          value : 'initial'
+        }
+      },
+      observers: [
+        '_reloadProduct(products.*)',
+        '_reloadProduct(order.*)',
+      ],
+      ready : function() {
+        this.setScrollDirection('y', $(this).find('paper-icon-item').get(0));
+      },
+      attributeChanged: function() {
+        if(!this.product && this.order && this.order.product) {
+          this.set('product', _.findWhere(this.products, {id: this.order.product}));
+        }
+      },
+      share : function(datas) {
+        
+      },
+      _reloadProduct : function() {
+
+        if(this.order && this.order.product) {
+
+          var realProduct = _.findWhere(this.products, {id: this.order.product});
+          if(realProduct) {
+            if(realProduct.label) { this.set('product.label', realProduct.label);}
+            if(realProduct.type) { this.set('product.type', realProduct.type);}
+            if(realProduct.value) { this.set('product.value', realProduct.value);}
+            if(realProduct.id) { this.set('product.id', realProduct.id);}
+          }
+
+        }
+
+      },
+      callShare : function(action) {
+
+        if (this.product) {
+
+          var datasShare = {
+              product : this.product,
+              order : this.order,
+              action : action,
+              callbacks : {
+                delete : _.bind(function() {
+                  this.destroy();
+                },this),
+                change : _.bind(function(data) {
+                  this.set('order.customers', "");
+                  this.set('order.customers', data.customers);
+                },this)
+              }
+          };
+
+          if(this.order.customers) {
+            datasShare.customers = this.order.customers;
+          }
+
+          this.fire('share', datasShare);
+
+        }
+
+      },
+      getProduct : function(order) {
+        return order[target];
+      },
+      onTap : function() {
+
+        if(this.format == 'select') {
+          this.fire('selectproduct', {product : this.product});
+        } else {
+          if(this.active) {
+            this.active = false;
+          } else {
+            this.active = true;
+          }
+        }
+
+      },
+      _share : function() {
+        if(!this.onShare) {
+          this.onShare = true;
+          if(this.order.share) {
+            this.callShare(false);
+          } else {
+            this.callShare(true);
+          }
+        }
+      },
+      _getActionIcon : function(format) {
+
+        if(format && format == "select") {
+          return "icons:done";
+        } else {
+          return "icons:delete";
+        }
+
+      },
+      handleTrack: function(e) {
+
+        if(!this.trackInfo) {
+            this.trackInfo = {};
+        }
+
+        var message;
+
+        switch(e.detail.state) {
+          case 'start':
+            message = 'Tracking started!';
+
+            this.trackInfo.start = {
+              x : e.detail.x,
+              y : e.detail.y,
+            };
+
+            break;
+          case 'track':
+            message = 'Tracking in progress... ' +
+              e.detail.x + ', ' + e.detail.y;
+            this.trackInfo.progress = {
+              x : e.detail.x,
+              y : e.detail.y,
+            };
+
+            break;
+          case 'end':
+            message = 'Tracking ended!';
+            this.trackInfo.end = {
+              x : e.detail.x,
+              y : e.detail.y,
+            };
+
+
+            break;
+        }
+
+        this.calcTrack(e);
+
+      },
+      calcTrack : function(e) {
+
+        if(this.format && this.format != 'initial') {
+          return false;
+        }
+
+        if(this.onDestroy) {
+          return false;
+        }
+
+        if(this.trackInfo && this.trackInfo.start && this.trackInfo.progress) {
+
+          var diffY = Math.abs(this.trackInfo.progress.y - this.trackInfo.start.y);
+          var diffX = Math.abs(this.trackInfo.progress.x - this.trackInfo.start.x);
+
+          if(diffY < diffX) {
+
+            if(this.trackInfo.start.x > this.trackInfo.progress.x) {
+
+                $(this).find('.content').css({
+                  'margin-right' : diffX,
+                  //opacity : 1.5-(diffX/$(this).width()*2),
+                  transition : "height 0.5s ease"
+                });
+
+              if(diffX > 50) {
+                this._share();
+                //this.destroying('margin-right');
+              }
+            } else if(this.trackInfo.start.x < this.trackInfo.progress.x) {
+
+                $(this).find('.content').css({
+                  'margin-left' : diffX,
+                  //opacity : 1.5-(diffX/$(this).width()*2),
+                  transition : "height 0.5s ease"
+                });
+
+              if(diffX > $(this).width()/2) {
+                this.destroying('margin-left');
+              }
+            }
+
+          } else {
+            
+            return true;
+
+            if(this.trackInfo.start.y > this.trackInfo.progress.y) {
+              /*
+                $(this).css({
+                  'margin-top' : diffY,
+                });   
+              */ 
+              if(diffY > 100) {
+                console.log('slide top');                
+              }
+            } else if(this.trackInfo.start.y < this.trackInfo.progress.y) {
+/*
+                $(this).css({
+                  'margin-bottom' : diffY,
+                });
+*/
+              if(diffY > 100) {
+                 
+                console.log('slide bottom');
+              }
+            }
+
+          }
+        }
+
+        if(e.detail.state == 'end' && !this.onDestroy) {
+          this.trackInfo = {};
+
+          $(this).find('.content').css({
+              margin : 0,
+              opacity : 1,
+              transition : "all 0.5s ease"
+          });
+
+          this.onShare = false;
+        }
+
+      },    
+      action : function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        if(this.format && this.format == 'initial') {
+          this.destroy('margin-left');
+        }
+        
+      },
+      destroying : function(direction) {
+
+        if(!this.onDestroy) {
+
+          this.onDestroy = true;
+
+          if(direction == 'margin-left') {
+            $(this).find('.content').css({
+              "margin-left" : "100%",
+              transition : "all 0.3s ease-out"
+            });
+          }
+
+          if(direction == 'margin-right') {
+            $(this).find('.content').css({
+              "margin-right" : "100%",
+              transition : "all 0.3s ease-out"
+            });
+          }
+
+          setTimeout(_.bind(function() {
+            this.destroy();
+            this.onDestroy = false;
+          },this), 300);
+
+        }
+
+      },
+      destroy : function() {
+        if(this.customer && this.order.customers && this.order.customers[this.customer.__firebaseKey__]) {
+          
+          var newOrderCustomer = this.order.customers;
+          delete newOrderCustomer[this.customer.__firebaseKey__];
+
+          if(Object.size(newOrderCustomer) > 0) {
+            this.set('order.customers', "");
+            this.set('order.customers', newOrderCustomer);
+          } else {
+            $(this).find('.content').css({
+              'margin': 0,
+              transition : "none",
+            });
+            this.fire('delete', {product : this.product, order : this.order});
+          }
+
+        } else {
+          this.fire('delete', {product : this.product, order : this.order});
+        }
+      },
+      _getIcon : function(type) {
+
+        var icon = "";
+
+        switch(type) {
+            case 'drink':
+                icon = "maps:local-bar";
+                break;
+            case 'plat':
+                icon = "maps:local-pizza";
+                break;
+            case 'dessert':
+                icon = "maps:local-cafe";
+                break;                
+            default:
+                icon = "icons:android";
+        }
+
+        return icon;
+      },
+      _getAvatar : function(name) {
+          return name.charAt(0);
+      },
+      _getTotal : function(total) {
+
+          var resultTotal = total;
+        
+          if(this.order && this.order.customers && Object.size(this.order.customers) > 0) {
+            resultTotal = resultTotal/Object.size(this.order.customers);
+          }
+
+          return  (Math.round(resultTotal*100)/100).toFixed(2);
+      },
+      _getClass : function(active, others) {
+
+        if(active) {
+          return active+" "+others;
+        } else {
+          return others;
+        }
+
+      },
+      _onNeonAnimationFinish : function() {
+
+      }   
+    });
+  </script>
+</dom-module>

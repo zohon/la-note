@@ -1,0 +1,201 @@
+<!--
+@license
+Copyright (c) 2015 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+<link rel="import" href="bills-element.html">
+
+<!--
+Example:
+    <bills-element></bills-element>
+@element bill-element
+-->
+
+<dom-module id="bills-view">
+  <template>
+
+    <style>
+      :host {
+        display: block;
+        padding-bottom:  65px;
+      }
+
+      paper-item {
+        background: var(--accent-color);
+        color: var(--text-primary-color);
+        cursor: pointer;
+      }
+
+      .total {
+        margin : 0 0 10px 0;
+        font-size: 25px;
+        padding: 10px;
+        background: #FFF;
+        box-shadow: 0px 10px 11px -10px #888;    
+        color: var(--accent-color); 
+      }
+
+      .totalInfo {
+        float:right;
+      }
+
+      .ticket {
+        margin : 10px 0;
+        font-size: 15px;
+        padding: 10px;
+        background: #FFF;
+      }
+
+      .ticket .infos {
+        display: inline-block;
+      }
+
+      .ticket .totalTicket {
+        float:right;
+        display: inline-block;
+        line-height: 40px;
+      }
+
+      .ticket .inputTicket {
+        width: 50px;
+        margin-left:10px;
+        display: inline-block;
+        text-align: right;
+      }
+
+      .payment {
+        margin : 10px 0;
+        font-size: 15px;
+        padding: 10px;
+        background: #FFF;
+        position: relative;
+      }
+
+      .payment h2 {
+        margin:0;
+        cursor: pointer;
+      }
+
+      .payment .infos{
+          display: inline-block;
+      }
+
+      .payment .inputpaidTicket {
+        width: 75px;
+        margin-left:10px;
+        display: inline-block;
+        text-align: right;
+      }
+
+      .payment .inputcurrency {
+        width: 75px;
+        margin-left:10px;
+        display: inline-block;
+        text-align: right;
+      }
+
+      .payment .totalCurrency {
+        position: absolute;
+        bottom:10px;
+        right:15px;
+        font-size: 25px;
+      }      
+            
+    </style>
+
+    <bills-element customers="{{customers}}" products="{{products}}" shared="{{shared}}" on-delete="delete"></bills-element>
+    
+    <div class="total" hidden="{{!_getTotal(total)}}">TOTAL <span class="totalInfo">{{_getTotal(total)}}</span></div>
+    
+    <div class="ticket"><span class="infos"><b>Ticket</b>&nbsp;:&nbsp;</span><paper-input no-label-float value="{{ticket}}" class="short inputTicket" label="ticket" type="number" ><div suffix>€</div></paper-input><span class="totalTicket" hidden="{{!_getTotal(total)}}">{{_getTicket(total, ticket)}}</span></div>
+
+    <div class="payment" hidden="{{!_getTotal(total)}}">
+      <h2 on-tap="showPayment">Payment</h2>
+      <div hidden="{{!selectPayment}}">
+        <span class="infos">Number of ticket&nbsp;:&nbsp;</span><paper-input no-label-float value="{{paidTicket}}" class="short inputpaidTicket" label="paidTicket" type="number"></paper-input>
+        <br />
+        <span class="infos">Currency&nbsp;:&nbsp;</span><paper-input no-label-float value="{{currency}}" class="short inputcurrency" label="currency" type="number"><div suffix>€</div></paper-input>
+      </div>
+      <div class="totalCurrency">Rest</span>&nbsp;<span>{{_getCurrency(total, paidTicket, currency, ticket)}}</span></div>
+    </div>
+
+  </template>
+  <script>
+
+    Polymer({
+      is: 'bills-view',
+      properties: {
+        customers: Array,
+        products: Array,
+        total : {
+          type : Number,
+          value : 0
+        },
+        ticket : {
+          type : Number,
+          value : 9
+        },
+        paidTicket : {
+          type : Number,
+          value : 0
+        },
+        currency : {
+          type : Number,
+          value : 0
+        },
+        selectPayment : {
+          type : Boolean,
+          value : false
+        }                        
+      },
+      showPayment : function() {
+        if(this.selectPayment) {
+          this.selectPayment = false;
+        } else {
+          this.selectPayment = true;
+        }
+      },
+      _getTotal : function(total) {
+        console.log("_getTotal "+ total);
+        if(!total) {
+          return false;
+        }
+        return (Math.round(total*100)/100).toFixed(2)+"€";
+      },      
+      _getTicket : function(total, ticket) {
+
+        var nbTicket = 0;
+        if(ticket && total) {
+          nbTicket = Math.floor(total/ticket);
+        }
+
+        var resttotal = total - (nbTicket*ticket);
+
+        var result = nbTicket+' ticket(s)';
+
+        if(resttotal) {
+          result += " "+(Math.round(resttotal*100)/100).toFixed(2)+"€";
+        }
+
+        return result;
+      },
+      _getCurrency : function(total, paidTicket, currency, ticket) {
+
+        var resttotal = total - (paidTicket*ticket);
+
+        if(currency) {
+          resttotal -= currency;
+        }
+
+        var result = (Math.round(resttotal*100)/100).toFixed(2)+"€";
+        
+        return result;
+      },
+    });
+
+  </script>
+</dom-module>

@@ -1,0 +1,96 @@
+<!--
+@license
+Copyright (c) 2015 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+<link rel="import" href="../../bower_components/paper-material/paper-material.html">
+<link rel="import" href="../../bower_components/paper-item/paper-item.html">
+<link rel="import" href="../../bower_components/paper-input/paper-input.html">
+<link rel="import" href="../../bower_components/paper-button/paper-button.html">
+<!--
+Example:
+    <bill-element></bill-element>
+@element bill-element
+-->
+<dom-module id="bill-element">
+
+  <template>
+  <style is="custom-style">
+
+    :host {
+      font-family: Roboto, Helvetica, Arial, sans-serif;
+      display: block; 
+      background: #FFF;
+
+      -webkit-user-select: none; /* Chrome/Safari */        
+      -moz-user-select: none; /* Firefox */
+      -ms-user-select: none; /* IE10+ */
+
+      /* Rules below not implemented in browsers yet */
+      -o-user-select: none;
+      user-select: none;         
+    }
+
+    .total {
+      float:right;
+    }
+
+    .element {
+      padding:15px;
+      border-bottom: 1px dashed #ddd;
+    }
+
+  </style>
+
+  <div class="element"><span>{{bill.nb}}</span>&nbsp;<span>{{product.label}}</span><div class="total">{{_getValue(product.value, bill.nb)}}</div></div>
+
+  </template>
+  <script>
+
+    Polymer({
+      is: 'bill-element',
+      properties: {
+        bill : {
+          notify : true,          
+          type : Object,
+          observer : '_getProduct'
+        },
+        product : {
+          notify : true,          
+          type : Object,
+          value : {}
+        },        
+        products : Array,    
+      },
+      observers: [
+        '_getProduct(products.*)',
+        '_getProduct(product.*)'
+      ],
+      ready : function() {
+        this._getProduct();
+      },
+      _getProduct : function() {
+        if(this.products) {
+          var targetProduct = _.findWhere(this.products, {id : this.bill.id});
+          if(targetProduct) {
+            this.set('product', targetProduct);
+          }
+        }
+      },
+      _getValue : function(value, nb) {
+
+        if(value && nb) {
+          return (Math.round(value*nb*100)/100).toFixed(2);
+        }
+
+      },    
+      _onNeonAnimationFinish : function() {
+
+      }   
+    });
+  </script>
+</dom-module>

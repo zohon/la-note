@@ -1,0 +1,504 @@
+<!--
+@license
+Copyright (c) 2015 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+<link rel="import" href="../../bower_components/paper-input/paper-input.html">
+<link rel="import" href="../../bower_components/paper-dropdown-menu/paper-dropdown-menu.html">
+<dom-module id="product-item">
+
+  <template>
+
+  <style is="custom-style">
+
+    :host {
+      font-family: Roboto, Helvetica, Arial, sans-serif;
+      display: block; 
+      background: #FFF;
+      -webkit-user-select: none; /* Chrome/Safari */        
+      -moz-user-select: none; /* Firefox */
+      -ms-user-select: none; /* IE10+ */
+
+      /* Rules below not implemented in browsers yet */
+      -o-user-select: none;
+      user-select: none;         
+    }
+
+    paper-icon-item .avatar {
+      background: var(--light-primary-color);
+    }
+
+    paper-icon-item .avatar {
+      display: inline-block;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      overflow: hidden;
+      background: #ccc;
+      line-height: 36px;
+      text-align: center;
+      text-transform: uppercase;
+      color:#FFF;
+      font-size: 20px;
+      transition : all 0.4s ease;
+    }
+    .active paper-icon-item .avatar {
+        background: var(--accent-color);
+    }
+    .delete {
+        position: absolute;
+        top:10px;
+        left:-45px;
+        display: inline-block;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        overflow: hidden;
+        background: var(--alert-background);
+        line-height: 35px;
+        text-align: center;
+        text-transform: uppercase;
+        color: var(--alert-color);
+        font-size: 20px;
+        z-index: 90;
+        box-shadow: 0 1px 5px rgba(0,0,0,0.23),0 1px 0px rgba(0,0,0,0.16);
+    }
+
+    .edit {
+        position: absolute;
+        top:10px;
+        left:-45px;
+        display: inline-block;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        overflow: hidden;
+        background: var(--accent-color);
+        line-height: 35px;
+        text-align: center;
+        text-transform: uppercase;
+        transition: all 0.2s ease;
+        color: var(--alert-color);
+        font-size: 20px;
+        z-index: 0;
+        box-shadow: 0 1px 5px rgba(0,0,0,0.23),0 1px 0px rgba(0,0,0,0.16);
+    }   
+    
+    paper-icon-item {
+      position: relative;
+      margin: 0 ;
+      padding: 10px 10px;
+      display: flex;
+      text-decoration: none;
+      overflow: hidden;
+    }
+
+    .person {
+      box-shadow: 0 0px 2px rgba(0,0,0,0.16),0 0px 2px rgba(0,0,0,0.08);
+    }
+
+    .active .person {
+      box-shadow: 0 1px 5px rgba(0,0,0,0.23),0 1px 0px rgba(0,0,0,0.16);
+    }
+
+
+    :focus {
+      outline: none;
+    }
+
+    paper-icon-item .avatar{
+        display: block;
+        float:left;
+        margin-right: 10px;
+    }
+
+    paper-icon-item paper-item-body {
+        display: block;
+        float:left;
+    }
+
+    paper-icon-item .total {
+        position: absolute;
+        right: 15px;
+        top: 0;
+        height: 40px;
+        line-height: 65px;
+        font-size: 25px;     
+    }
+
+    .person {
+      cursor: pointer;
+      transition: all 0.5s ease;
+    }
+
+      paper-icon-item .secondary {
+        color: var(--secondary-text-color);
+        font-size: 13px;
+      }
+
+      paper-icon-item .total {
+        color: var(--accent-color);
+      }
+
+      .name {
+        text-transform: capitalize;
+      }
+
+      .details {
+          display: block;
+          overflow: hidden;
+      }
+
+      paper-ripple {
+        color: var(--primary-background-color);
+      }
+
+      .inputlabel {
+
+      }
+
+      paper-input {
+        margin-right: 10px;
+      }
+     
+      .editing {
+        padding: 15px;
+        background: #FFF;
+      }
+
+      .paper-dropdown-menu {
+        padding: 0 !important;
+      }
+
+    </style>
+    
+  <div class$="[[_getClass(active, 'content')]]" class="content"  product-id="{{product.id}}">
+
+    <paper-icon-item tabindex="0" class="person" on-tap="onTap" on-track="handleTrack">
+
+        <div class="avatar" item-icon><iron-icon icon="[[_getIcon(product.type)]]">{{_getAvatar(product.label)}}</iron-icon></div>
+
+          <paper-item-body two-line>
+            <div class="name">{{product.label}}</div>
+            <div secondary class="secondary">{{product.type}}</div>
+          </paper-item-body>
+
+          <div class='total' >{{_getTotal(product.value)}}</div>
+
+      <div class="delete" item-icon><iron-icon icon="icons:delete"></iron-icon><paper-ripple></paper-ripple></div>
+
+      <div class="edit" item-icon on-tap="_selectEdit"><iron-icon icon="editor:mode-edit"></iron-icon><paper-ripple></paper-ripple></div>
+
+    </paper-icon-item>
+
+    <div class="editing" hidden="{{!edit}}">
+          <paper-input on-tap="_dontListen" no-label-float value="{{product.label}}" on-keydown="_checkKey" class="short" label="label" ></paper-input>
+
+          <paper-input style="display:inline-block;" type="number" on-tap="_dontListen" no-label-float value="{{product.value}}" on-keydown="_checkKey" class="short inputlabel" label="Value" ><div suffix>€</div></paper-input>
+
+          <paper-dropdown-menu label="Type" style="display:inline-block;" on-keydown="_checkKey">
+            <paper-menu class="dropdown-content" attr-for-selected="value" selected="{{product.type}}">
+              <paper-item value="plat">Plat</paper-item>
+              <paper-item value="drink">Drink</paper-item>
+              <paper-item value="dessert">Dessert</paper-item>
+            </paper-menu>
+          </paper-dropdown-menu>
+
+
+    </div>
+
+  </div>
+
+  </template>
+  <script>
+    Polymer({
+      is: 'product-item',
+      properties: {
+        product: {
+          type : Object,
+          observer : "observeChangeProduct"
+        },
+        edit : {
+          type : Boolean,
+          value: false,
+        }
+      },
+      ready : function() {
+          this.setScrollDirection('y', $(this).find('paper-icon-item').get(0));
+      },
+      onTap : function() {
+        if(this.active) {
+          this.desactivate();
+        } else {
+          this.activate();
+        }
+      },
+      observeChangeProduct : function(datas) {
+
+        if(this.product) {
+
+          if(this.product.creationDate) {
+            var diffDate = new Date().getTime() - this.product.creationDate;
+            if(!this.product.label && diffDate < 1000 ) {
+              setTimeout(_.bind(function() {
+                  this._selectEdit();
+              },this), 100);
+            }
+          }
+
+        }        
+
+      },
+      activate : function() {
+        if(this.active != 'active') {
+          this.active = 'active';
+          this._selectEdit();
+          //this.fire('activate', {customer : this.customer});
+        }
+      },
+      desactivate : function() {       
+        this.active = false;
+        this.edit = false;
+        //this.fire('desactivate', {customer : this.customer});
+      },
+      select : function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        this.fire('selectproduct', this.product);
+      },
+      _getClass : function(target, others) {
+
+        if(target) {
+          return target+" "+others;
+        } else {
+          return others;
+        }
+
+      },
+      _getIcon : function(type) {
+
+        var icon = "";
+
+        switch(type) {
+            case 'drink':
+                icon = "maps:local-bar";
+                break;
+            case 'plat':
+                icon = "maps:local-pizza";
+                break;
+            case 'dessert':
+                icon = "maps:local-cafe";
+                break;                
+            default:
+                icon = "icons:help-outline";
+        }
+
+        return icon;
+      },      
+      _dontListen : function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+      },
+      _selectEdit : function(e) {
+
+        if(e) {
+          e.preventDefault();
+          e.stopPropagation();
+        }
+
+        if(this.edit) {
+          this.edit = false;
+        } else {
+          this.edit = true;
+          $(this).find('paper-input input').get(0).focus();
+        }
+
+      },
+      _getTotal : function(total) {
+        if(!total) {
+          total =0;
+        }
+        return  (Math.round(total*100)/100).toFixed(2);
+      },      
+      _getAvatar : function(name) {
+
+          if (!this.colorAvatar) {
+            var hash  = 0;
+            for (var i = 0; i < name.length; i++) {
+               hash  = name.charCodeAt(i) + ((hash  << 5) - hash );
+            }
+
+            var c = (hash & 0x00FFFFFF).toString(16).toUpperCase();
+            var color =  "00000".substring(0, 6 - c.length) + c;
+            this.colorAvatar = "#"+color;
+            $(this).find('paper-icon-item .avatar').css('background', this.colorAvatar);
+          }
+
+      },
+      _checkKey: function(e) {
+        if (e.keyCode === 13) {
+          this.desactivate();
+        }
+      },
+      _onDelete: function() {
+        this.fire('delete-product', {product: this.product});
+      },
+      handleTrack: function(e) {
+
+
+        if(!this.trackInfo) {
+            this.trackInfo = {};
+        }
+
+        var message;
+
+        switch(e.detail.state) {
+          case 'start':
+            message = 'Tracking started!';
+
+            this.trackInfo.start = {
+              x : e.detail.x,
+              y : e.detail.y,
+            };
+
+            break;
+          case 'track':
+            message = 'Tracking in progress... ' +
+              e.detail.x + ', ' + e.detail.y;
+            this.trackInfo.progress = {
+              x : e.detail.x,
+              y : e.detail.y,
+            };
+
+            break;
+          case 'end':
+            message = 'Tracking ended!';
+            this.trackInfo.end = {
+              x : e.detail.x,
+              y : e.detail.y,
+            };
+
+
+            break;
+        }
+
+        this.calcTrack(e);
+
+      },
+      calcTrack : function(e) {
+
+        if(this.onDestroy) {
+          return false;
+        }
+
+        if(this.trackInfo && this.trackInfo.start && this.trackInfo.progress) {
+
+
+          var diffY = Math.abs(this.trackInfo.progress.y - this.trackInfo.start.y);
+          var diffX = Math.abs(this.trackInfo.progress.x - this.trackInfo.start.x);
+
+          if(diffY < diffX) {
+
+            if(this.trackInfo.start.x > this.trackInfo.progress.x) {
+
+              var percent = diffX/$(this).width();
+              var left = (150*percent);
+
+              if(left > 10) {
+                left = 10;
+              }
+
+              if(!this.edit) {
+/*
+                $(this).find('.edit').css({
+                  left : left+"px",
+                  transition : "height 0.5s ease"           
+                });
+*/
+                if(diffX > 50) {
+                  this.active = 'active';
+                  this._selectEdit();
+                }
+              }
+            } else if(this.trackInfo.start.x < this.trackInfo.progress.x) {
+
+              var percent = diffX/$(this).width();
+              var left = -50+(150*percent);
+
+              if(left > 10) {
+                left = 10;
+              }
+
+              $(this).find('.delete').css({
+                left : left+"px",
+                transition : "height 0.5s ease"
+              });
+
+              if(diffX > $(this).width()/2) {
+                this.destroy();
+              }
+            }
+
+          } else {
+
+            if(this.trackInfo.start.y > this.trackInfo.progress.y) {
+              /*
+                $(this).css({
+                  'margin-top' : diffY,
+                });   
+              */ 
+              if(diffY > 100) {
+                console.log('slide top');                
+              }
+
+            } else if(this.trackInfo.start.y < this.trackInfo.progress.y) {
+/*
+                $(this).css({
+                  'margin-bottom' : diffY,
+                });
+*/
+              if(diffY > 100) {
+                console.log('slide bottom');
+              }
+
+            }
+
+          }
+        }
+
+        if(e.detail.state == 'end' && !this.onDestroy) {
+            this.trackInfo = {};
+            $(this).find('.delete').css({
+                left : "-40px",
+                transition : "all 0.5s ease"
+            });
+        }
+
+      },
+      destroy : function(direction) {
+
+        if(!this.onDestroy) {
+
+          this.onDestroy = true;
+
+            $(this).css({
+              opacity : 0,
+              transition : "all 0.3s ease-out"
+            });
+
+
+          var that = this;
+          setTimeout(_.bind(function() {
+            this.fire('delete', {product : this.product});
+            //$(that).remove();
+          },this), 300);
+        }
+
+      },
+    });
+  </script>
+</dom-module>

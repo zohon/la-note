@@ -1,0 +1,492 @@
+
+<!--
+@license
+Copyright (c) 2015 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+
+
+<!-- Iron elements -->
+<link rel="import" href="../bower_components/iron-flex-layout/classes/iron-flex-layout.html">
+
+<!-- Paper elements -->
+<link rel="import" href="../bower_components/paper-drawer-panel/paper-drawer-panel.html">
+<link rel="import" href="../bower_components/paper-header-panel/paper-header-panel.html">
+<link rel="import" href="../bower_components/paper-icon-button/paper-icon-button.html">
+<link rel="import" href="../bower_components/paper-menu/paper-menu.html">
+<link rel="import" href="../bower_components/paper-toolbar/paper-toolbar.html">
+
+<link rel="import" href="place/place-view.html">
+<link rel="import" href="product/product-view.html">
+<link rel="import" href="person/persons-view.html">
+<link rel="import" href="menu/menu-select-element.html">
+<link rel="import" href="table/table-view.html">
+<link rel="import" href="bill/bills-view.html">
+
+<dom-module id="main-view">
+  <template >
+
+  <style>
+      :host {
+        display: block;
+      }
+
+      #drawerToolbar {
+        color: var(--secondary-text-color);
+        background-color: var(--drawer-menu-color);
+      }
+
+      paper-menu {
+        padding: 15px 0 !important;
+      }
+
+
+      .paper-menu > .iron-selected {
+        color: var(--default-primary-color);
+      }
+
+      paper-menu a {
+        text-decoration: none;
+        color: var(--menu-link-color);
+        display: -ms-flexbox;
+        display: -webkit-flex;
+        display: flex;
+        -ms-flex-direction: row;
+        -webkit-flex-direction: row;
+        flex-direction: row;
+        -ms-flex-align: center;
+        -webkit-align-items: center;
+        align-items: center;
+        font-family: var(--default-font-family);
+        -webkit-font-smoothing: antialiased;
+        text-rendering: optimizeLegibility;
+        font-weight: 400;
+        line-height: 30px;
+        min-height: 60px;
+        padding: 0 15px;
+        transition : all 0.5s ease;
+        position: relative;
+      }
+
+      paper-menu iron-icon {
+        margin-right: 33px;
+        opacity: 0.54;
+      }
+
+      paper-menu a.iron-selected {
+        background: var(--dark-primary-color);
+        color : var(--text-primary-color);
+      }
+
+      paper-menu a.iron-selected iron-icon{
+        opacity: 1;
+      }
+
+      #mainToolbar .middle-container {
+        height: 100%;
+        margin-left: 48px;
+      }
+
+      #mainToolbar:not(.tall) .middle {
+        font-size: 18px;
+        padding-bottom: 0;
+      }
+
+      .app-name {
+        font-family: 'Roboto Slab', 'Roboto', 'Helvetica', 'Arial', sans-serif;
+        font-weight: bold;
+      }
+
+      .clear-btn:hover,
+      .clear-btn:focus {
+        background-color: var(--text-primary-color);
+        color: var(--default-primary-color);
+      }
+
+      /* Height of the scroll area */
+      .content {
+        padding: 15px 15px 0;
+      }
+
+      todo-list {
+        margin: 0 auto 32px;
+      }
+
+      todo-list, todo-input {
+        max-width: 1000px;
+      }
+
+      todo-input {
+        margin: 0 auto;
+      }
+
+      .drawer {
+        z-index: 100;
+      }
+
+      html /deep/ #ink {
+        color: var(--menu-link-color);
+      }
+
+      .loader {
+        text-align: center;
+        margin-bottom: 10px;
+        padding:5px;
+        box-radius : 50%;
+      }
+
+      .loader paper-spinner {
+        background: #FFF;
+        padding: 10px;
+        border-radius: 100%;
+        box-shadow: 0px 2px 1px #ddd;
+      }
+
+      .urlTexarea {
+         opacity: 0;
+         width:1px;
+         position: absolute;
+         right:0;
+         top:0;
+      }
+
+      .hidden {
+        display: none;
+      }
+
+  </style>
+
+    <paper-drawer-panel id="paperDrawerPanel">
+      <div drawer class="drawer">
+
+        <!-- Drawer Toolbar -->
+        <paper-toolbar id="drawerToolbar"></paper-toolbar>
+
+        <!-- Drawer Content -->
+        <paper-menu class="list" attr-for-selected="data-route" selected="{{page}}">
+
+          <a data-route="places" tabindex="-1" on-tap="closeDrawer">
+            <iron-icon icon="maps:store-mall-directory"></iron-icon>
+            <span>{{thePlace.label}}</span><span hidden="{{thePlace}}">Places</span>
+            <paper-ripple></paper-ripple>
+          </a>
+
+          <a data-route="tables" tabindex="-1" on-tap="closeDrawer" hidden="{{!thePlace}}">
+            <iron-icon icon="social:people"></iron-icon>
+            <span>{{theTable.label}}</span><span hidden="{{theTable}}">Tables</span>
+            <paper-ripple></paper-ripple>
+          </a>
+
+          <a data-route="customers" tabindex="-1" on-tap="closeDrawer" hidden="{{!_showCustomer(thePlace, theTable)}}">
+            <iron-icon icon="social:person"></iron-icon>
+            <span>Customers</span>
+            <paper-ripple></paper-ripple>
+          </a>
+
+          <a data-route="bill" tabindex="-1" on-tap="closeDrawer" hidden="{{!_showCustomer(thePlace, theTable)}}">
+            <iron-icon icon="editor:attach-money"></iron-icon>
+            <span>The Bill</span>
+            <paper-ripple></paper-ripple>
+          </a>
+
+          <a data-route="products" tabindex="-1" on-tap="closeDrawer" hidden="{{!thePlace}}">
+            <iron-icon icon="maps:local-dining"></iron-icon>
+            <span>Products</span>
+            <paper-ripple></paper-ripple>
+          </a>
+
+          <hr />
+
+          <a ata-route="" tabindex="-1" on-tap="sendSMS" hidden="{{!thePlace}}" style="cursor:pointer;">
+            <iron-icon icon="communication:textsms"></iron-icon>
+            <span>Share</span>
+            <paper-ripple></paper-ripple>
+            <textarea id="urlTexarea" class="urlTexarea"></textarea>
+          </a>
+
+        </paper-menu>
+      </div>
+      <paper-header-panel main>
+
+        <!-- Main Toolbar -->
+        <paper-toolbar id="mainToolbar">
+        
+          <paper-icon-button id="paperToggle" icon="icons:menu" paper-drawer-toggle ></paper-icon-button>
+          <span class="flex"></span>
+
+          <!-- Application name -->
+          <div class="middle middle-container center horizontal layout flex">
+            <div class="app-name flex"><span>{{thePlace.label}}</span><span hidden="{{!thePlace}}">&nbsp;-&nbsp;</span><span>{{theTable.label}}</span><span hidden="{{!theTable}}">&nbsp;-&nbsp;</span><span>{{page}}</span></div>
+            
+            <div class="total">{{_getTotal(total, paid)}}</div>
+<!--
+            <iron-icon icon="todo-icons:account-circle" on-tap="signOut">
+            </iron-icon>
+-->
+          </div>
+
+        </paper-toolbar>
+
+        <!-- Main Content -->
+        <div class="content">
+
+          <geolocation-data position="{{position}}" ></geolocation-data>
+
+          <div hidden="{{page}}" class="loader"><paper-spinner active></paper-spinner></div>
+
+          <div hidden="{{!_selectRoute(page, 'places')}}">
+              <item-data location="https://lanote.firebaseio.com/places" items="{{places}}" on-connected="_readyFirebasePlaces" ></item-data>
+              <place-view class="flex" places="{{places}}" position="{{position}}" on-selectplace="_selectPlace"></place-view>
+          </div>
+
+          <div hidden="{{!_selectRoute(page, 'tables')}}">
+              <item-data location="{{_getTablesUrl(thePlace)}}" items="{{tables}}" on-connected="_readyFirebaseTables"></item-data>
+              
+              <table-view class="flex" tables="{{tables}}" on-delete="_deleteTable" on-selecttable="_selectTables" ></table-view>
+          </div>
+
+          <div>
+              <item-data location="{{_getProductsUrl(thePlace)}}" items="{{products}}" ></item-data>
+              
+              <menu-select-element id="menu-select-element" class="flex" products="{{products}}" on-selectproduct="associateProduct" ></menu-select-element>
+
+              <div hidden="{{!_selectRoute(page, 'products')}}">
+                <product-view class="flex" products="{{products}}"></product-view>
+              </div>
+          </div>
+
+          <div hidden="{{!_selectRoute(page, 'customers')}}">
+
+              <item-data location="{{_getCustomersUrl(thePlace, theTable)}}" items="{{customers}}" on-connected="_readyCustomers" ></item-data>
+
+              <item-data id="item-data" location="{{_getSharedUrl(thePlace, theTable)}}" items="{{shared}}" ></item-data>
+
+              <persons-view id="personView" table="{{theTable}}" place="{{thePlace}}" class="flex" route="{{route}}" customers="{{customers}}" products="{{products}}" orders="{{orders}}" on-show-menu="showMenu" on-change-total="_calcTotal" shared="{{shared}}"></persons-view>
+
+          </div>
+
+          <div hidden="{{!_selectRoute(page, 'bill')}}">
+              <bills-view id="billView" class="flex" route="{{route}}" customers="{{customers}}" products="{{products}}" total="{{total}}" shared="{{shared}}"></bills-view>
+          </div>          
+
+        </div>
+
+      </paper-header-panel>
+    </paper-drawer-panel>
+
+  </template>
+  <script>
+    Polymer({
+      is: 'main-view',
+      properties: {
+        page: {
+          value : '',
+          notify: true,
+          observer : '_changePage'
+        },
+        total : {
+          type : Number,
+          notify: true
+        },
+        thePlace : {
+          value : false,
+          notify: true,
+        },
+        theTable : {
+          value : false,
+          notify: true,
+        },
+        position : {
+          value : {}
+        },
+        path : Object,
+      },
+      _readyFirebasePlaces : function() {
+        if(!this.page) {
+          this.set('page','places');
+        }
+        this.selectRouting();
+      },
+      _readyFirebaseTables : function() {
+        this.selectRouting();
+      },
+      _readyCustomers : function() {
+        this._calcTotal();
+      },
+      sendSMS : function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        $(this).find('#urlTexarea').val(window.location.href);
+        $(this).find('#urlTexarea').select();
+
+        try {
+          var successful = document.execCommand('copy');
+          var msg = successful ? 'successful' : 'unsuccessful';
+          console.log('Copying text command was ' + msg);
+        } catch (err) {
+          console.log('Oops, unable to copy');
+        }
+        $('#toast').prop('text', 'Url copy to clipboard');
+        $('#toast').get(0).show();
+
+        if(window.mobilecheck) {
+          window.open('sms:?body='+window.location.href, '_system');
+        }
+
+      },
+      _calcTotal : function(e) {
+
+        this.infoTotal = $(this).find('#personView').get(0).infoTotal;
+
+        this.total = this.infoTotal.total;
+        this.paid = this.infoTotal.paid;
+      },
+      _changePage : function(value) {
+        if(value == 'places') {
+          $('#map').trigger('resize');
+        }
+      },
+      showMenu : function() {
+        $(this).find('#menu-select-element').get(0).showSelect();
+      },
+      associateProduct : function(template, data) {
+        console.log("associateProduct");
+        if(data && data.product) {
+          $(this).find('#personView').get(0).associate(data.product);
+        }
+      },
+      changeRouting : function(params) {
+        this.set('path', params);
+        console.log("changeRouting");
+        console.log(params);
+        this.selectRouting();
+      },
+      selectRouting : function() {
+
+        if(this.path) {
+          if(this.path.place && !this.thePlace) {
+            this.selectPlace(this.path.place, true);
+          }
+          if(this.path.table && !this.theTable) {
+            this.selectTable(this.path.table, true);
+          }
+        }
+      },
+      selectPlace : function(id, nourl) {
+        console.log("selectPlace");
+
+        if(!nourl) {
+          var nourl = false;
+        }
+
+        if(id) {
+          var searchPlace = _.findWhere(this.places, {__firebaseKey__ : id});
+          if(searchPlace) {
+            this._selectPlace('', searchPlace, nourl);
+          }
+        }
+      },      
+      _selectPlace : function(event, place, nourl) {
+
+        this.set('page','tables');
+
+        if(place && this.thePlace != place) {
+          this.set('thePlace', place);
+          this.set('theTable', '');
+          if(!nourl) {
+            page('/place/'+this.thePlace.__firebaseKey__);
+          }
+        }
+
+      },
+      _deleteTable : function(e) {
+        if(e.detail.table && e.detail.table == this.theTable) {
+          this.theTable = "";
+          this.set('page','tables');
+        }
+      },
+      selectTable : function(id, nourl) {
+
+        if(!nourl) {
+          var nourl = false;
+        }
+
+        if(id) {
+          var searchTable = _.findWhere(this.tables, {__firebaseKey__ : id});
+          if(searchTable) {
+            this._selectTables('', searchTable, nourl);
+          }
+        }
+      },        
+      _selectTables  : function(event, table, nourl) {
+
+        this.set('page','customers');
+
+        if(this.theTable != table) {
+          this.set('theTable', table);
+          if(!nourl) {
+            page('/place/'+this.thePlace.__firebaseKey__+'/table/'+this.theTable.__firebaseKey__);
+          }
+        }
+
+        this._calcTotal();
+
+      },
+      _getTablesUrl: function(thePlace) {
+        if(thePlace && thePlace.__firebaseKey__) {
+          return "https://lanote.firebaseio.com/places/"+thePlace.__firebaseKey__+"/tables";
+        }
+      },
+      _getProductsUrl: function(thePlace) {
+        if(thePlace && thePlace.__firebaseKey__) {
+          return "https://lanote.firebaseio.com/places/"+thePlace.__firebaseKey__+"/products";
+        }
+      },
+      _getCustomersUrl: function(thePlace, table) {
+        if(thePlace && thePlace.__firebaseKey__ && table && table.__firebaseKey__) {
+          return "https://lanote.firebaseio.com/places/"+thePlace.__firebaseKey__+"/tables/"+table.__firebaseKey__+"/customers";
+        }
+      },
+      _getSharedUrl: function(thePlace, table) {
+        if(thePlace && thePlace.__firebaseKey__ && table && table.__firebaseKey__) {
+          return "https://lanote.firebaseio.com/places/"+thePlace.__firebaseKey__+"/tables/"+table.__firebaseKey__+"/shared";
+        }
+      },
+      _showCustomer : function(thePlace, theTable) {
+
+        if(thePlace && theTable) {
+          return true;
+        }
+
+        return false;
+      },
+      _selectRoute : function(info, target) {
+        if(info == target) {
+          return true;
+        } else {
+          return false;
+        }
+      },
+      _getTotal : function(total, paid) {
+        if(!total) {
+          total =0;
+        }
+        result = total - paid;
+        return  (Math.round(result*100)/100).toFixed(2);
+      },      
+      // Close drawer after menu item is selected if drawerPanel is narrow
+      closeDrawer: function(e) {
+        e.preventDefault();
+        var drawerPanel = this.$.paperDrawerPanel;
+        if (drawerPanel.narrow) {
+          drawerPanel.closeDrawer();
+        }
+      }      
+    });
+  </script>
+</dom-module>
