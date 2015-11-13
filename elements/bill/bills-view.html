@@ -107,9 +107,9 @@ Example:
             
     </style>
 
-    <bills-element customers="{{customers}}" products="{{products}}" shared="{{shared}}" on-delete="delete"></bills-element>
+    <bills-element customers="[[customers]]" products="[[products]]" shared="{{shared}}" on-delete="delete"></bills-element>
     
-    <div class="total" hidden="{{!_getTotal(total)}}">TOTAL <span class="totalInfo">{{_getTotal(total)}}</span></div>
+    <div class="total" hidden="[[!_getTotal(total)]]">TOTAL&nbsp;<span class="totalInfo">{{_getTotal(total)}}</span></div>
     
     <div class="ticket"><span class="infos"><b>Ticket</b>&nbsp;:&nbsp;</span><paper-input no-label-float value="{{ticket}}" class="short inputTicket" label="ticket" type="number" ><div suffix>€</div></paper-input><span class="totalTicket" hidden="{{!_getTotal(total)}}">{{_getTicket(total, ticket)}}</span></div>
 
@@ -160,7 +160,6 @@ Example:
         }
       },
       _getTotal : function(total) {
-        console.log("_getTotal "+ total);
         if(!total) {
           return false;
         }

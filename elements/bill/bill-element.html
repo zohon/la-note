@@ -46,7 +46,7 @@ Example:
 
   </style>
 
-  <div class="element"><span>{{bill.nb}}</span>&nbsp;<span>{{product.label}}</span><div class="total">{{_getValue(product.value, bill.nb)}}</div></div>
+  <div class="element"><span>[[bill.nb]]</span>&nbsp;<span>[[product.label]]</span><div class="total">[[_getValue(product.value, bill.nb)]]</div></div>
 
   </template>
   <script>
@@ -63,23 +63,26 @@ Example:
           notify : true,          
           type : Object,
           value : {}
-        },        
-        products : Array,    
+        },
+        products : Array,
       },
       observers: [
         '_getProduct(products.*)',
-        '_getProduct(product.*)'
+        //'_getProduct(product.*)'
       ],
       ready : function() {
         this._getProduct();
       },
       _getProduct : function() {
+
         if(this.products) {
-          var targetProduct = _.findWhere(this.products, {id : this.bill.id});
+          var targetProduct = _.findWhere(this.products, { id : this.bill.id });
           if(targetProduct) {
-            this.set('product', targetProduct);
+            this.set('product.label', targetProduct.label);
+            this.set('product.value', targetProduct.value);
           }
         }
+        
       },
       _getValue : function(value, nb) {
 

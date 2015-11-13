@@ -39,10 +39,7 @@ Example:
           type : Array,
           value : [],
         },
-        products : {
-          type : Array,
-          value : [],
-        },
+        products : Array,
         shared : {
           type : Array,
           value : [],
@@ -50,7 +47,7 @@ Example:
       },
       observers: [
         '_loadOrders(customers.*)',
-        '_loadOrders(products.*)',
+      // '_loadOrders(products.*)',
         '_loadOrders(shared.*)',
       ],      
       ready : function() {
@@ -77,12 +74,10 @@ Example:
                   });
 
                   if (!change) {
-
                     this.push('bills', {
                       id: bill.product,
                       nb : 1
                     });
-
                   }
                 }
               },this));
