@@ -25,48 +25,38 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       }
 
       paper-menu {
-      background: none;
-      margin-bottom: 10px;
-      padding: 0;
-      position: fixed;
-      bottom: 0;
-      left: 15px;
-      z-index: 200;
+        background: none;
+        margin-bottom: 10px;
+        padding: 0;
+        position: fixed;
+        bottom: 0;
+        left: 15px;
+        z-index: 200;
       }
 
-      paper-menu a{
+      paper-menu paper-fab{
         display: inline-block;
-        width: 40px;
-        height: 40px;
-        border-radius: 50%;
-        overflow: hidden;
-        background: #ccc;
-        line-height: 36px;
-        text-align: center;
-        text-transform: uppercase;
-        color: #FFF;
-        font-size: 20px;
-        transition: all 0.4s ease;
-        cursor: pointer;
-        box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12), 0 3px 1px -2px rgba(0, 0, 0, 0.2);
+        background: #fff;
+        width: 45px;
+        height: 45px;
+        padding: 11px;
+        color: var(--accent-color);   
       }
 
-      paper-menu a.iron-selected {
+      paper-menu a.iron-selected,
+      paper-menu paper-fab.iron-selected {
         background : var(--accent-color);
+        color:#FFF !important;
       }
 
     </style>
 
     <paper-menu attr-for-selected="data-filter" selected="{{filterType}}">
-      <a data-filter="plat" tabindex="-1">
-        <iron-icon icon="maps:local-pizza"></iron-icon>
-      </a>
-      <a data-filter="drink" tabindex="-1">
-        <iron-icon icon="maps:local-bar"></iron-icon>
-      </a>
-      <a data-filter="dessert" tabindex="-1">
-        <iron-icon icon="maps:local-cafe"></iron-icon>
-      </a>
+
+      <paper-fab icon="maps:local-pizza" data-filter="plat" tabindex="-1"></paper-fab>
+      <paper-fab icon="maps:local-bar" data-filter="drink" tabindex="-1"></paper-fab>
+      <paper-fab icon="maps:local-cafe" data-filter="dessert" tabindex="-1"></paper-fab>
+
     </paper-menu>
     
     <template is="dom-repeat" items="{{products}}" as="product" 

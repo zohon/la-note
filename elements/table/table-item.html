@@ -27,6 +27,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       /* Rules below not implemented in browsers yet */
       -o-user-select: none;
       user-select: none;
+
     }
 
     paper-icon-item .avatar {
@@ -90,7 +91,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     }
     
     .active .edit {
-      right : 10px;
+     /* right : 10px;*/
     }
 
     .select {
@@ -153,6 +154,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     paper-icon-item paper-item-body {
         display: block;
         float:left;
+        max-width: 80%;
     }
 
     paper-icon-item .total {
@@ -353,25 +355,16 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       _getAvatar : function(name) {
         if(name) {
 
-          if (!this.colorAvatar) {
-            var hash  = 0;
-            for (var i = 0; i < name.length; i++) {
-               hash  = name.charCodeAt(i) + ((hash  << 5) - hash );
-            }
-
-            var c = (hash & 0x00FFFFFF).toString(16).toUpperCase();
-            var color =  "00000".substring(0, 6 - c.length) + c;
-            this.colorAvatar = "#"+color;
-            $(this).find('paper-icon-item .avatar').css('background', this.colorAvatar);
-          }  
-          /*          
-          var letters = '0123456789ABCDEF'.split('');
-          var color = '#';
-          for (var i = 0; i < 6; i++ ) {
-              color += letters[Math.floor(Math.random() * 16)];
+          var hash  = 0;
+          for (var i = 0; i < name.length; i++) {
+             hash  = name.charCodeAt(i) + ((hash  << 5) - hash );
           }
 
-          */       
+          var c = (hash & 0x00FFFFFF).toString(16).toUpperCase();
+          var color =  "00000".substring(0, 6 - c.length) + c;
+          this.colorAvatar = "#"+color;
+          $(this).find('paper-icon-item .avatar').css('background', this.colorAvatar);
+    
           return name.charAt(0);
         }
       },

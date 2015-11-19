@@ -228,7 +228,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         }
       },
       ready : function() {
-          this.setScrollDirection('y', $(this).find('paper-icon-item').get(0));
+        console.log('Product ready');
+        this.setScrollDirection('y', $(this).find('paper-icon-item').get(0));
       },
       onTap : function() {
         if(this.active) {
@@ -325,19 +326,15 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         return  (Math.round(total*100)/100).toFixed(2);
       },      
       _getAvatar : function(name) {
-
-          if (!this.colorAvatar) {
-            var hash  = 0;
-            for (var i = 0; i < name.length; i++) {
-               hash  = name.charCodeAt(i) + ((hash  << 5) - hash );
-            }
-
-            var c = (hash & 0x00FFFFFF).toString(16).toUpperCase();
-            var color =  "00000".substring(0, 6 - c.length) + c;
-            this.colorAvatar = "#"+color;
-            $(this).find('paper-icon-item .avatar').css('background', this.colorAvatar);
+          var hash  = 0;
+          for (var i = 0; i < name.length; i++) {
+             hash  = name.charCodeAt(i) + ((hash  << 5) - hash );
           }
 
+          var c = (hash & 0x00FFFFFF).toString(16).toUpperCase();
+          var color =  "00000".substring(0, 6 - c.length) + c;
+          this.colorAvatar = "#"+color;
+          $(this).find('paper-icon-item .avatar').css('background', this.colorAvatar);
       },
       _checkKey: function(e) {
         if (e.keyCode === 13) {

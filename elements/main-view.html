@@ -38,6 +38,18 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       #drawerToolbar {
         color: var(--secondary-text-color);
         background-color: var(--drawer-menu-color);
+
+      }
+
+      #drawerToolbar .logo {
+      height: 55px;
+      background: #FFF;
+      padding: 3px;
+      margin-top: 15px;
+      }
+
+      #drawerToolbar .logo img{
+            max-height: 60px;
       }
 
       paper-menu {
@@ -65,11 +77,16 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         -webkit-font-smoothing: antialiased;
         text-rendering: optimizeLegibility;
         font-weight: 400;
-        line-height: 30px;
         min-height: 60px;
         padding: 0 15px;
         transition : all 0.5s ease;
         position: relative;
+      }
+
+      paper-menu a span {
+        max-height: 40px;
+        overflow: hidden;
+        max-width: 75%;
       }
 
       paper-menu iron-icon {
@@ -99,6 +116,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       .app-name {
         font-family: 'Roboto Slab', 'Roboto', 'Helvetica', 'Arial', sans-serif;
         font-weight: bold;
+        max-height: 50px;
       }
 
       .clear-btn:hover,
@@ -164,7 +182,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       <div drawer class="drawer">
 
         <!-- Drawer Toolbar -->
-        <paper-toolbar id="drawerToolbar"></paper-toolbar>
+        <paper-toolbar id="drawerToolbar">
+         <div class='logo'>
+          <img src="../images/touch/icon-128x128.png">
+          </div>
+        </paper-toolbar>
 
         <!-- Drawer Content -->
         <paper-menu class="list" attr-for-selected="data-route" selected="{{page}}">
@@ -240,23 +262,22 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
           <div hidden="{{!_selectRoute(page, 'places')}}">
               <item-data location="https://lanote.firebaseio.com/places" items="{{places}}" on-connected="_readyFirebasePlaces" ></item-data>
-              <place-view class="flex" places="{{places}}" position="{{position}}" on-selectplace="_selectPlace"></place-view>
+              <place-view hidden="{{!_selectRoute(page, 'places')}}" class="flex" places="{{places}}" position="{{position}}" on-selectplace="_selectPlace"></place-view>
           </div>
 
           <div hidden="{{!_selectRoute(page, 'tables')}}">
               <item-data location="{{_getTablesUrl(thePlace)}}" items="{{tables}}" on-connected="_readyFirebaseTables"></item-data>
               
-              <table-view class="flex" tables="{{tables}}" on-delete="_deleteTable" on-selecttable="_selectTables" ></table-view>
+              <table-view hidden="{{!_selectRoute(page, 'tables')}}" class="flex" tables="{{tables}}" on-delete="_deleteTable" on-selecttable="_selectTables" ></table-view>
           </div>
 
           <div>
               <item-data location="{{_getProductsUrl(thePlace)}}" items="{{products}}" ></item-data>
               
-              <menu-select-element id="menu-select-element" class="flex" products="{{products}}" on-selectproduct="associateProduct" ></menu-select-element>
+              <menu-select-element hidden="{{!products}}" id="menu-select-element" class="flex" products="{{products}}" on-selectproduct="associateProduct" ></menu-select-element>
 
-              <div hidden="{{!_selectRoute(page, 'products')}}">
-                <product-view class="flex" products="{{products}}"></product-view>
-              </div>
+              <product-view class="flex" products="{{products}}" hidden="{{!_selectRoute(page, 'products')}}"></product-view>
+              
           </div>
 
           <div hidden="{{!_selectRoute(page, 'customers')}}">
@@ -265,12 +286,12 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
               <item-data id="item-data" location="{{_getSharedUrl(thePlace, theTable)}}" items="{{shared}}" ></item-data>
 
-              <persons-view id="personView" table="{{theTable}}" place="{{thePlace}}" class="flex" route="{{route}}" customers="{{customers}}" products="{{products}}" orders="{{orders}}" on-show-menu="showMenu" on-change-total="_calcTotal" shared="{{shared}}"></persons-view>
+              <persons-view hidden="{{!_selectRoute(page, 'customers')}}" id="personView" table="{{theTable}}" place="{{thePlace}}" class="flex" route="{{route}}" customers="{{customers}}" products="{{products}}" orders="{{orders}}" on-show-menu="showMenu" on-change-total="_calcTotal" shared="{{shared}}"></persons-view>
 
           </div>
 
           <div hidden="{{!_selectRoute(page, 'bill')}}">
-              <bills-view id="billView" class="flex" route="{{route}}" customers="[[customers]]" products="[[products]]" total="{{total}}" shared="[[shared]]"></bills-view>
+              <bills-view hidden="{{!_selectRoute(page, 'bill')}}" id="billView" class="flex" route="{{route}}" customers="[[customers]]" products="[[products]]" total="{{total}}" shared="[[shared]]"></bills-view>
           </div>          
 
         </div>
@@ -352,7 +373,13 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         }
       },
       showMenu : function() {
-        $(this).find('#menu-select-element').get(0).showSelect();
+
+        if($(this).find('#menu-select-element').get(0).show) {
+          $(this).find('#menu-select-element').get(0).cache();
+        } else {
+          $(this).find('#menu-select-element').get(0).showSelect();
+        }
+
       },
       associateProduct : function(template, data) {
         console.log("associateProduct");

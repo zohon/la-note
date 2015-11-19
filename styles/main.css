@@ -37,3 +37,8 @@ body {
 paper-toast {
   z-index: 200;
 }
+
+#dropShadow.paper-header-panel {
+	opacity: 0.8 !important;
+	left: -100% !important;
+}

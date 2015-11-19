@@ -385,18 +385,15 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       _getAvatar : function(name) {
         if(name) {
 
-          if (!this.colorAvatar) {
-            var hash  = 0;
-            for (var i = 0; i < name.length; i++) {
-               hash  = name.charCodeAt(i) + ((hash  << 5) - hash );
-            }
-
-            var c = (hash & 0x00FFFFFF).toString(16).toUpperCase();
-            var color =  "00000".substring(0, 6 - c.length) + c;
-            this.colorAvatar = "#"+color;
-            $(this).find('.place .avatar').css('background', this.colorAvatar);
+          var hash  = 0;
+          for (var i = 0; i < name.length; i++) {
+             hash  = name.charCodeAt(i) + ((hash  << 5) - hash );
           }
 
+          var c = (hash & 0x00FFFFFF).toString(16).toUpperCase();
+          var color =  "00000".substring(0, 6 - c.length) + c;
+          this.colorAvatar = "#"+color;
+          $(this).find('.place .avatar').css('background', this.colorAvatar);
 
           return name.charAt(0);
         }

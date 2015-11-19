@@ -310,7 +310,7 @@ Example:
               bottom : "-60px",
               transition : "all 0.2s ease-out"
             });
-
+            this.show = false;
           setTimeout(function() {
             that.hidding
           }, 200);
@@ -320,11 +320,12 @@ Example:
       showSelect : function() {
         console.log("showSelect");
         this.hidding = false;
-          $(this).find('.main').css({
+        $(this).find('.main').css({
             height : 300,
             bottom : 0,
             transition : "all 0.5s ease-out"
-          });
+        });
+        this.show = true;
       },
       _onNeonAnimationFinish : function() {
 
