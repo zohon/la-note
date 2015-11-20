@@ -1,0 +1,5 @@
+<item-data location="{{_getProductsUrl(thePlace)}}" items="{{products}}" ></item-data>
+          
+<menu-select-element hidden="{{!products}}" id="menu-select-element" class="flex" products="{{products}}" on-selectproduct="associateProduct" ></menu-select-element>
+
+<product-view class="flex" products="{{products}}" hidden="{{!_selectRoute(page, 'products')}}"></product-view>

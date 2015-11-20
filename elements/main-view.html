@@ -256,6 +256,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         <!-- Main Content -->
         <div class="content">
 
+          <div hidden="{{!loading}}" class="loader"><paper-spinner active></paper-spinner></div>
+
           <geolocation-data position="{{position}}" ></geolocation-data>
 
           <div hidden="{{page}}" class="loader"><paper-spinner active></paper-spinner></div>
@@ -265,13 +267,14 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
               <place-view hidden="{{!_selectRoute(page, 'places')}}" class="flex" places="{{places}}" position="{{position}}" on-selectplace="_selectPlace"></place-view>
           </div>
 
-          <div hidden="{{!_selectRoute(page, 'tables')}}">
+          <div hidden="{{!_selectRoute(page, 'tables')}}" id="table-view-element">
               <item-data location="{{_getTablesUrl(thePlace)}}" items="{{tables}}" on-connected="_readyFirebaseTables"></item-data>
               
               <table-view hidden="{{!_selectRoute(page, 'tables')}}" class="flex" tables="{{tables}}" on-delete="_deleteTable" on-selecttable="_selectTables" ></table-view>
           </div>
 
-          <div>
+          <div id="product-element">
+          
               <item-data location="{{_getProductsUrl(thePlace)}}" items="{{products}}" ></item-data>
               
               <menu-select-element hidden="{{!products}}" id="menu-select-element" class="flex" products="{{products}}" on-selectproduct="associateProduct" ></menu-select-element>
@@ -324,6 +327,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         position : {
           value : {}
         },
+        loading : {
+          type: Boolean,
+          value : false,
+          notify: true,
+        }, 
         path : Object,
       },
       _readyFirebasePlaces : function() {
@@ -331,9 +339,21 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           this.set('page','places');
         }
         this.selectRouting();
+        //this.loader();
       },
       _readyFirebaseTables : function() {
         this.selectRouting();
+        this.loader();
+        console.log('_readyFirebaseTables');
+      },
+      loader : function() {
+
+        if(this.loading) {
+          this.set('loading', false);
+        } else {
+          this.set('loading', true); 
+        }
+
       },
       _readyCustomers : function() {
         this._calcTotal();
@@ -389,8 +409,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       },
       changeRouting : function(params) {
         this.set('path', params);
-        console.log("changeRouting");
-        console.log(params);
         this.selectRouting();
       },
       selectRouting : function() {
@@ -405,8 +423,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         }
       },
       selectPlace : function(id, nourl) {
-        console.log("selectPlace");
-
         if(!nourl) {
           var nourl = false;
         }
@@ -465,9 +481,18 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
       },
       _getTablesUrl: function(thePlace) {
+
         if(thePlace && thePlace.__firebaseKey__) {
-          return "https://lanote.firebaseio.com/places/"+thePlace.__firebaseKey__+"/tables";
+          var tablesUrl = "https://lanote.firebaseio.com/places/"+thePlace.__firebaseKey__+"/tables";
+
+          if(tablesUrl != this.tablesUrl) {
+            this.loader();
+            this.set('tablesUrl',tablesUrl); 
+            return tablesUrl;
+          } 
+          
         }
+
       },
       _getProductsUrl: function(thePlace) {
         if(thePlace && thePlace.__firebaseKey__) {
